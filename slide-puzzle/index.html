@@ -247,6 +247,27 @@
     line-height: 1.55;
   }
 
+
+  .back-btn {
+    margin-top: auto;
+    display: block;
+    width: 100%;
+    padding: 11px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #f4f6f5;
+    color: var(--text-dim);
+    text-align: center;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 800;
+    transition: transform .15s ease, background .15s ease;
+  }
+  .back-btn:hover {
+    transform: translateY(-1px);
+    background: #e8ecea;
+  }
+
   .win-banner {
     display: none;
     margin-top: 8px;
@@ -286,7 +307,7 @@
     .console { width: min(96vw, 520px); padding: 12px; }
     .game-area { grid-template-columns: 1fr; gap: 10px; }
     .side-panel { display: grid; grid-template-columns: 1fr 1fr; }
-    .side-title, .modes, .side-stats, .info-card, .sound-btn { grid-column: 1 / -1; }
+    .side-title, .modes, .side-stats, .info-card, .sound-btn, .back-btn { grid-column: 1 / -1; }
     .modes { grid-template-columns: 1fr 1fr; }
     .board { max-width: min(84vw, 430px); margin: 0 auto; }
   }
@@ -337,6 +358,7 @@
       <button class="sound-btn" id="soundBtn" type="button" onclick="toggleSound()">🔊 音あり</button>
 
       <div class="info-card"><strong>遊び方</strong><br>空いているマスのとなりのピースをクリック（タップ）すると動きます。最初の一手でタイマーが始まります。</div>
+      <a class="back-btn" href="../">← ゲームひろばへ戻る</a>
     </div>
   </div>
 </div>
