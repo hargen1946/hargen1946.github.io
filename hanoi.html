@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ハノイの塔</title>
+<style>
+  :root {
+    --bg: #e8ede6;
+    --panel: #f7f4ec;
+    --grid-bg: #ddd6c4;
+    --tile: #fbf9f2;
+    --border: #c7d3cd;
+    --accent: #146c48;
+    --accent-dim: #1f8a63;
+    --text: #1c2a26;
+    --text-dim: #4b5b56;
+    --mono: "JetBrains Mono", "Courier New", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+
+  .console {
+    width: 100%;
+    max-width: 520px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    box-shadow: 0 0 0 1px #000, 0 20px 60px rgba(0,0,0,0.15);
+  }
+
+  h1 {
+    font-size: 26px;
+    letter-spacing: 0.04em;
+    margin: 0 0 6px 0;
+    color: var(--accent);
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .subtitle {
+    font-size: 15px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .disk-select {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .disk-select label {
+    font-size: 16px;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+
+  .disk-select select {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--tile);
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+
+  .stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    padding: 0 2px;
+    letter-spacing: 0.02em;
+  }
+
+  .stats span b {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .board {
+    background: var(--grid-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 10px 0 10px;
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    height: 260px;
+    position: relative;
+  }
+
+  .peg {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    padding-bottom: 14px;
+  }
+
+  .peg-rod {
+    position: absolute;
+    bottom: 14px;
+    width: 10px;
+    height: 200px;
+    background: #a9bab2;
+    border-radius: 4px 4px 0 0;
+    z-index: 1;
+  }
+
+  .peg-base {
+    position: absolute;
+    bottom: 0;
+    width: 90%;
+    height: 14px;
+    background: #a9bab2;
+    border-radius: 3px;
+    z-index: 1;
+  }
+
+  .peg.selected .peg-rod {
+    background: var(--accent-dim);
+  }
+
+  .disk {
+    height: 30px;
+    margin-bottom: 3px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: transform 0.1s ease;
+  }
+
+  .peg-label {
+    position: absolute;
+    top: -6px;
+    font-size: 13px;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+
+  .controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .btn {
+    flex: 1;
+    background: var(--accent-dim);
+    color: #ffffff;
+    border: none;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 16px;
+    padding: 14px 0;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: filter 0.15s ease;
+  }
+
+  .btn:hover { filter: brightness(1.15); }
+
+  .btn.secondary {
+    background: transparent;
+    color: var(--text-dim);
+    border: 2px solid var(--border);
+  }
+
+  .btn.secondary:hover { color: var(--text); border-color: var(--accent-dim); }
+
+  .win-banner {
+    display: none;
+    margin-top: 16px;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+    border: 1px solid var(--accent-dim);
+    background: rgba(31, 138, 99, 0.10);
+    padding: 12px;
+    border-radius: 4px;
+  }
+
+  .win-banner.show { display: block; }
+
+  .footer-note {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-dim);
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+</style>
+</head>
+<body>
+
+<div class="console">
+  <h1>ハノイの塔</h1>
+  <div class="subtitle">すべての円ばんを、右のはしの棒に移しかえましょう</div>
+
+  <div class="disk-select">
+    <label for="diskCount">円ばんの数：</label>
+    <select id="diskCount" onchange="changeDiskCount()">
+      <option value="3">3枚</option>
+      <option value="4" selected>4枚</option>
+      <option value="5">5枚</option>
+      <option value="6">6枚</option>
+      <option value="7">7枚</option>
+    </select>
+  </div>
+
+  <div class="stats">
+    <span>手数: <b id="moveCount">0</b></span>
+    <span>最短: <b id="minMoves">15</b></span>
+  </div>
+
+  <div class="board" id="board">
+    <div class="peg" id="peg0" onclick="pegClick(0)">
+      <div class="peg-label">A</div>
+      <div class="peg-rod"></div>
+      <div class="peg-base"></div>
+    </div>
+    <div class="peg" id="peg1" onclick="pegClick(1)">
+      <div class="peg-label">B</div>
+      <div class="peg-rod"></div>
+      <div class="peg-base"></div>
+    </div>
+    <div class="peg" id="peg2" onclick="pegClick(2)">
+      <div class="peg-label">C</div>
+      <div class="peg-rod"></div>
+      <div class="peg-base"></div>
+    </div>
+  </div>
+
+  <div class="win-banner" id="winBanner">できました！お見事です。</div>
+
+  <div class="controls">
+    <button class="btn" onclick="newGame()">最初からやり直す</button>
+  </div>
+
+  <div class="footer-note">動かしたい円ばんがある棒をクリックし、次に移動先の棒をクリックしてください</div>
+</div>
+
+<script>
+  let numDisks = 4;
+  let pegs = [[], [], []];
+  let selectedPeg = null;
+  let moveCount = 0;
+  let solved = false;
+
+  const diskColors = [
+    '#146c48', '#1f8a63', '#4fae8a', '#7cc4a8',
+    '#a9d8c4', '#2f7a5e', '#0f5536', '#3a9970'
+  ];
+
+  function newGame() {
+    pegs = [[], [], []];
+    for (let i = numDisks; i >= 1; i--) {
+      pegs[0].push(i);
+    }
+    selectedPeg = null;
+    moveCount = 0;
+    solved = false;
+    document.getElementById('winBanner').classList.remove('show');
+    document.getElementById('minMoves').textContent = Math.pow(2, numDisks) - 1;
+    updateStats();
+    render();
+  }
+
+  function changeDiskCount() {
+    numDisks = parseInt(document.getElementById('diskCount').value);
+    newGame();
+  }
+
+  function render() {
+    for (let p = 0; p < 3; p++) {
+      const pegEl = document.getElementById('peg' + p);
+      // Remove old disks
+      pegEl.querySelectorAll('.disk').forEach(d => d.remove());
+      // Add current disks (largest at bottom due to column-reverse)
+      pegs[p].forEach(diskSize => {
+        const div = document.createElement('div');
+        div.className = 'disk';
+        const widthPercent = 25 + (diskSize / numDisks) * 65;
+        div.style.width = widthPercent + '%';
+        div.style.background = diskColors[(diskSize - 1) % diskColors.length];
+        div.textContent = diskSize;
+        pegEl.appendChild(div);
+      });
+      pegEl.classList.toggle('selected', selectedPeg === p);
+    }
+  }
+
+  function pegClick(p) {
+    if (solved) return;
+
+    if (selectedPeg === null) {
+      if (pegs[p].length === 0) return;
+      selectedPeg = p;
+      render();
+      return;
+    }
+
+    if (selectedPeg === p) {
+      selectedPeg = null;
+      render();
+      return;
+    }
+
+    const fromPeg = pegs[selectedPeg];
+    const toPeg = pegs[p];
+
+    if (fromPeg.length === 0) {
+      selectedPeg = null;
+      render();
+      return;
+    }
+
+    const movingDisk = fromPeg[fromPeg.length - 1];
+    const topOfTarget = toPeg.length > 0 ? toPeg[toPeg.length - 1] : null;
+
+    if (topOfTarget === null || movingDisk < topOfTarget) {
+      fromPeg.pop();
+      toPeg.push(movingDisk);
+      moveCount++;
+      updateStats();
+      checkWin();
+    }
+
+    selectedPeg = null;
+    render();
+  }
+
+  function updateStats() {
+    document.getElementById('moveCount').textContent = moveCount;
+  }
+
+  function checkWin() {
+    if (pegs[2].length === numDisks) {
+      solved = true;
+      document.getElementById('winBanner').classList.add('show');
+    }
+  }
+
+  newGame();
+</script>
+
+</body>
+</html>
