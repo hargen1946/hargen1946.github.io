@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>インベーダー迎撃ゲーム</title>
+<style>
+  :root {
+    --bg: #e8ede6;
+    --panel: #f7f4ec;
+    --border: #c7d3cd;
+    --accent: #146c48;
+    --accent-dim: #1f8a63;
+    --text: #1c2a26;
+    --text-dim: #4b5b56;
+    --mono: "JetBrains Mono", "Courier New", monospace;
+    --screen-bg: #0c1410;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+
+  .console {
+    width: 100%;
+    max-width: 480px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 22px;
+    box-shadow: 0 0 0 1px #000, 0 20px 60px rgba(0,0,0,0.15);
+  }
+
+  h1 {
+    font-size: 24px;
+    letter-spacing: 0.03em;
+    margin: 0 0 16px 0;
+    color: var(--accent);
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    padding: 0 2px;
+  }
+
+  .stats span b {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .screen-wrap {
+    background: var(--screen-bg);
+    border: 3px solid #33443c;
+    border-radius: 6px;
+    padding: 6px;
+    position: relative;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: var(--screen-bg);
+    border-radius: 2px;
+    touch-action: none;
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(12, 20, 16, 0.92);
+    border-radius: 2px;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .overlay.hidden { display: none; }
+
+  .overlay-title {
+    color: #7ee8b8;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: 0.04em;
+  }
+
+  .overlay-desc {
+    color: #b7c9c0;
+    font-size: 14px;
+    margin-bottom: 20px;
+    line-height: 1.8;
+  }
+
+  .btn {
+    background: var(--accent-dim);
+    color: #ffffff;
+    border: none;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 16px;
+    padding: 14px 28px;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: filter 0.15s ease;
+  }
+
+  .btn:hover { filter: brightness(1.15); }
+
+  .touch-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .touch-btn {
+    flex: 1;
+    background: var(--tile, #fbf9f2);
+    border: 2px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 18px;
+    padding: 16px 0;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .touch-btn:active { background: rgba(31, 138, 99, 0.15); border-color: var(--accent-dim); }
+
+  .speed-select {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .speed-select label {
+    font-size: 14px;
+    color: #b7c9c0;
+    font-weight: 600;
+  }
+
+  .speed-select select {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    background: #f7f4ec;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+
+  .footer-note {
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--text-dim);
+    text-align: center;
+    line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+
+<div class="console">
+  <h1>インベーダー迎撃ゲーム</h1>
+
+  <div class="stats">
+    <span>スコア: <b id="scoreVal">0</b></span>
+    <span>のこり機: <b id="livesVal">3</b></span>
+    <span>面: <b id="levelVal">1</b></span>
+  </div>
+
+  <div class="screen-wrap">
+    <canvas id="game" width="400" height="440"></canvas>
+    <div class="overlay" id="overlay">
+      <div class="overlay-title" id="overlayTitle">インベーダー迎撃ゲーム</div>
+      <div class="overlay-desc">
+        左右キー（または下のボタン）で自機を動かし、<br>
+        スペースキー（または下の「発射」ボタン）で弾を撃ちます。<br>
+        すべてのインベーダーを倒すとクリアです。
+      </div>
+      <div class="speed-select">
+        <label for="speedSelect">スピード：</label>
+        <select id="speedSelect">
+          <option value="0.18">ゆっくり</option>
+          <option value="1" selected>ふつう</option>
+          <option value="1.6">はやい</option>
+        </select>
+      </div>
+      <button class="btn" id="startBtn">スタート</button>
+    </div>
+  </div>
+
+  <div class="touch-controls">
+    <button class="touch-btn" id="leftBtn">◀ 左</button>
+    <button class="touch-btn" id="fireBtn">発射</button>
+    <button class="touch-btn" id="rightBtn">右 ▶</button>
+  </div>
+
+  <div class="footer-note">キーボード操作: ←→ で移動、スペースキーで発射</div>
+</div>
+
+<script>
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const overlay = document.getElementById('overlay');
+  const overlayTitle = document.getElementById('overlayTitle');
+  const overlayDesc = document.querySelector('.overlay-desc');
+  const startBtn = document.getElementById('startBtn');
+
+  const scoreVal = document.getElementById('scoreVal');
+  const livesVal = document.getElementById('livesVal');
+  const levelVal = document.getElementById('levelVal');
+
+  let score = 0;
+  let lives = 3;
+  let level = 1;
+  let running = false;
+  let animId = null;
+
+  // Player
+  const player = { w: 34, h: 16, x: W / 2 - 17, y: H - 34, speed: 4.5 };
+  let moveLeft = false;
+  let moveRight = false;
+
+  // Bullets
+  let playerBullets = [];
+  let enemyBullets = [];
+  const PLAYER_BULLET_SPEED = 7;
+  const ENEMY_BULLET_SPEED = 3.2;
+
+  // Invaders
+  let invaders = [];
+  let invDir = 1;
+  let invSpeed = 0.6;
+  let invDropAmount = 14;
+  let enemyFireCooldown = 0;
+  let speedMultiplier = 1;
+
+  const ROWS = 4;
+  const COLS = 7;
+  const INV_W = 28;
+  const INV_H = 18;
+  const INV_GAP_X = 12;
+  const INV_GAP_Y = 14;
+
+  function setupInvaders() {
+    invaders = [];
+    const totalWidth = COLS * (INV_W + INV_GAP_X) - INV_GAP_X;
+    const startX = (W - totalWidth) / 2;
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        invaders.push({
+          x: startX + c * (INV_W + INV_GAP_X),
+          y: 40 + r * (INV_H + INV_GAP_Y),
+          alive: true,
+          row: r
+        });
+      }
+    }
+    invDir = 1;
+    invSpeed = (0.6 + (level - 1) * 0.25) * speedMultiplier;
+  }
+
+  function resetGame() {
+    score = 0;
+    lives = 3;
+    level = 1;
+    player.x = W / 2 - player.w / 2;
+    playerBullets = [];
+    enemyBullets = [];
+    setupInvaders();
+    updateStats();
+  }
+
+  function updateStats() {
+    scoreVal.textContent = score;
+    livesVal.textContent = lives;
+    levelVal.textContent = level;
+  }
+
+  function rowColor(row) {
+    const colors = ['#ff6b6b', '#ffd166', '#7ee8b8', '#8fb8ff'];
+    return colors[row % colors.length];
+  }
+
+  function drawPlayer() {
+    ctx.fillStyle = '#7ee8b8';
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+    ctx.fillRect(player.x + player.w / 2 - 3, player.y - 8, 6, 8);
+  }
+
+  function drawInvaders() {
+    invaders.forEach(inv => {
+      if (!inv.alive) return;
+      ctx.fillStyle = rowColor(inv.row);
+      ctx.fillRect(inv.x, inv.y, INV_W, INV_H);
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      ctx.fillRect(inv.x + 5, inv.y + 5, 4, 4);
+      ctx.fillRect(inv.x + INV_W - 9, inv.y + 5, 4, 4);
+    });
+  }
+
+  function drawBullets() {
+    ctx.fillStyle = '#e8ffe8';
+    playerBullets.forEach(b => ctx.fillRect(b.x - 2, b.y, 4, 10));
+    ctx.fillStyle = '#ff9f9f';
+    enemyBullets.forEach(b => ctx.fillRect(b.x - 2, b.y, 4, 10));
+  }
+
+  function updatePlayer() {
+    if (moveLeft) player.x -= player.speed;
+    if (moveRight) player.x += player.speed;
+    player.x = Math.max(4, Math.min(W - player.w - 4, player.x));
+  }
+
+  function updateBullets() {
+    playerBullets.forEach(b => b.y -= PLAYER_BULLET_SPEED);
+    playerBullets = playerBullets.filter(b => b.y > -10);
+
+    enemyBullets.forEach(b => b.y += ENEMY_BULLET_SPEED);
+    enemyBullets = enemyBullets.filter(b => b.y < H + 10);
+  }
+
+  function updateInvaders() {
+    const aliveList = invaders.filter(i => i.alive);
+    if (aliveList.length === 0) {
+      if (level >= 5) {
+        endGame(true);
+        return;
+      }
+      level++;
+      setupInvaders();
+      playClearSound();
+      return;
+    }
+
+    let hitEdge = false;
+    aliveList.forEach(inv => {
+      inv.x += invSpeed * invDir;
+      if (inv.x <= 4 || inv.x + INV_W >= W - 4) hitEdge = true;
+    });
+
+    if (hitEdge) {
+      invDir *= -1;
+      aliveList.forEach(inv => { inv.y += invDropAmount; });
+    }
+
+    // Check if invaders reached player
+    aliveList.forEach(inv => {
+      if (inv.y + INV_H >= player.y) {
+        loseLife(true);
+      }
+    });
+
+    // Enemy fire
+    enemyFireCooldown -= 1;
+    if (enemyFireCooldown <= 0 && aliveList.length > 0) {
+      const shooter = aliveList[Math.floor(Math.random() * aliveList.length)];
+      enemyBullets.push({ x: shooter.x + INV_W / 2, y: shooter.y + INV_H });
+      enemyFireCooldown = Math.max(15, (60 - level * 5) / speedMultiplier);
+    }
+  }
+
+  function checkCollisions() {
+    playerBullets.forEach(b => {
+      invaders.forEach(inv => {
+        if (!inv.alive) return;
+        if (b.x > inv.x && b.x < inv.x + INV_W && b.y > inv.y && b.y < inv.y + INV_H) {
+          inv.alive = false;
+          b.y = -100;
+          score += 10;
+          updateStats();
+          playHitSound();
+        }
+      });
+    });
+
+    enemyBullets.forEach(b => {
+      if (b.x > player.x && b.x < player.x + player.w && b.y > player.y && b.y < player.y + player.h) {
+        b.y = H + 100;
+        loseLife(false);
+      }
+    });
+  }
+
+  function loseLife(fromInvasion) {
+    lives -= 1;
+    updateStats();
+    enemyBullets = [];
+    if (lives <= 0) {
+      endGame(false);
+      return;
+    }
+    if (fromInvasion) {
+      setupInvaders();
+    }
+    player.x = W / 2 - player.w / 2;
+  }
+
+  function endGame(won) {
+    running = false;
+    cancelAnimationFrame(animId);
+    overlayTitle.textContent = won ? '全面クリア！お見事です' : 'ゲームオーバー';
+    overlayDesc.innerHTML = `スコア: <b>${score}</b><br>もう一度挑戦しますか？`;
+    startBtn.textContent = 'もう一度あそぶ';
+    overlay.classList.remove('hidden');
+    if (won) {
+      playClearSound();
+    } else {
+      playGameOverSound();
+    }
+  }
+
+  // Sound effects (synthesized, no files needed)
+  let audioCtx = null;
+  function getAudioCtx() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playShootSound() {
+    try {
+      const ctx = getAudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.12);
+    } catch (e) {
+      // Audio not available; fail silently
+    }
+  }
+
+  function playHitSound() {
+    try {
+      const ctx = getAudioCtx();
+      const bufferSize = ctx.sampleRate * 0.15;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+      }
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(1800, ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.15);
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      noise.start();
+    } catch (e) {
+      // Audio not available; fail silently
+    }
+  }
+
+  function playClearSound() {
+    try {
+      const ctx = getAudioCtx();
+      const notes = [523, 659, 784, 1047];
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.18);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + i * 0.12);
+        osc.stop(ctx.currentTime + i * 0.12 + 0.18);
+      });
+    } catch (e) {
+      // Audio not available; fail silently
+    }
+  }
+
+  function playGameOverSound() {
+    try {
+      const ctx = getAudioCtx();
+      const notes = [392, 330, 262, 196];
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.16);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime + i * 0.16);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.16 + 0.22);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + i * 0.16);
+        osc.stop(ctx.currentTime + i * 0.16 + 0.22);
+      });
+    } catch (e) {
+      // Audio not available; fail silently
+    }
+  }
+
+  function fire() {
+    if (!running) return;
+    if (playerBullets.length < 3) {
+      playerBullets.push({ x: player.x + player.w / 2, y: player.y - 4 });
+      playShootSound();
+    }
+  }
+
+  function loop() {
+    if (!running) return;
+    ctx.clearRect(0, 0, W, H);
+
+    updatePlayer();
+    updateBullets();
+    updateInvaders();
+    checkCollisions();
+
+    drawInvaders();
+    drawBullets();
+    drawPlayer();
+
+    animId = requestAnimationFrame(loop);
+  }
+
+  function startGame() {
+    speedMultiplier = parseFloat(document.getElementById('speedSelect').value);
+    resetGame();
+    overlay.classList.add('hidden');
+    running = true;
+    loop();
+  }
+
+  startBtn.addEventListener('click', startGame);
+
+  // Keyboard controls
+  document.addEventListener('keydown', e => {
+    if (e.code === 'ArrowLeft') moveLeft = true;
+    if (e.code === 'ArrowRight') moveRight = true;
+    if (e.code === 'Space') { e.preventDefault(); fire(); }
+  });
+  document.addEventListener('keyup', e => {
+    if (e.code === 'ArrowLeft') moveLeft = false;
+    if (e.code === 'ArrowRight') moveRight = false;
+  });
+
+  // Touch / click controls
+  const leftBtn = document.getElementById('leftBtn');
+  const rightBtn = document.getElementById('rightBtn');
+  const fireBtn = document.getElementById('fireBtn');
+
+  function bindHold(el, onDown, onUp) {
+    el.addEventListener('mousedown', onDown);
+    el.addEventListener('touchstart', e => { e.preventDefault(); onDown(); }, { passive: false });
+    el.addEventListener('mouseup', onUp);
+    el.addEventListener('mouseleave', onUp);
+    el.addEventListener('touchend', e => { e.preventDefault(); onUp(); }, { passive: false });
+  }
+
+  bindHold(leftBtn, () => moveLeft = true, () => moveLeft = false);
+  bindHold(rightBtn, () => moveRight = true, () => moveRight = false);
+  fireBtn.addEventListener('click', fire);
+  fireBtn.addEventListener('touchstart', e => { e.preventDefault(); fire(); }, { passive: false });
+
+  // Initial static draw
+  setupInvaders();
+  drawInvaders();
+  drawPlayer();
+</script>
+
+</body>
+</html>
