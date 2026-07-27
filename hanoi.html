@@ -5,24 +5,187 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ハノイの塔</title>
 <style>
-:root{--bg:#e8ede6;--panel:#f7f4ec;--grid-bg:#ddd6c4;--tile:#fbf9f2;--border:#b9c7c0;--accent:#146c48;--accent-dim:#1f8a63;--text:#1c2a26;--text-dim:#4b5b56;--rod:#8d6e63;--rod-selected:#d27a24;--font:"Yu Gothic UI","Meiryo",sans-serif}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font);display:flex;align-items:flex-start;justify-content:center;padding:20px 16px}.console{width:100%;max-width:720px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:22px;box-shadow:0 16px 44px rgba(0,0,0,.14);position:relative;overflow:hidden}h1{font-size:28px;letter-spacing:.04em;margin:0 0 6px;color:var(--accent);font-weight:700;text-align:center}.subtitle{font-size:15px;color:var(--text-dim);margin-bottom:18px;text-align:center}.disk-select{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px}.disk-select label{font-size:16px;color:var(--text-dim);font-weight:600}.disk-select select{font-family:var(--font);font-size:18px;font-weight:700;color:var(--accent);background:var(--tile);border:2px solid var(--border);border-radius:7px;padding:7px 12px;cursor:pointer}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.stat-box{background:var(--tile);border:1px solid var(--border);border-radius:7px;padding:9px 8px;text-align:center;color:var(--text-dim);font-size:14px;font-weight:600}.stat-box b{display:block;margin-top:3px;color:var(--text);font-size:21px}.records{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}.record-box{background:#eef5f1;border:1px solid var(--border);border-radius:7px;padding:9px 10px;text-align:center;color:var(--text-dim);font-size:14px;font-weight:600}.record-box b{color:var(--accent);font-size:18px;margin-left:5px}.board{background:var(--grid-bg);border:1px solid var(--border);border-radius:9px;padding:18px 8px 0;display:flex;justify-content:space-around;align-items:flex-end;height:300px;position:relative;user-select:none}.peg{flex:1;height:100%;display:flex;flex-direction:column-reverse;align-items:center;position:relative;cursor:pointer;padding-bottom:18px;min-width:0}.peg:after{content:"";position:absolute;inset:0 3px 10px;border-radius:8px;transition:background .12s ease;z-index:0}.peg:hover:after{background:rgba(255,255,255,.2)}.peg-rod{position:absolute;bottom:18px;width:28px;height:225px;background:var(--rod);border:2px solid rgba(60,42,35,.28);border-radius:11px 11px 2px 2px;z-index:1;box-shadow:inset 4px 0 0 rgba(255,255,255,.18)}.peg-base{position:absolute;bottom:0;width:92%;height:18px;background:var(--rod);border:2px solid rgba(60,42,35,.28);border-radius:6px;z-index:1}.peg.selected .peg-rod,.peg.selected .peg-base{background:var(--rod-selected)}.disk{height:31px;margin-bottom:3px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55);font-weight:800;font-size:15px;z-index:2;border:2px solid rgba(0,0,0,.2);box-shadow:0 3px 5px rgba(0,0,0,.24),inset 0 2px 0 rgba(255,255,255,.24);transition:transform .12s ease}.peg.selected .disk:last-of-type{transform:translateY(-7px);outline:3px solid rgba(210,122,36,.42)}.peg-label{position:absolute;top:-4px;font-size:15px;color:var(--text-dim);font-weight:700;z-index:3}.message{min-height:24px;margin-top:10px;text-align:center;color:#a23a2a;font-weight:700;font-size:14px}.controls{display:flex;gap:8px;margin-top:10px}.btn{flex:1;background:var(--accent-dim);color:#fff;border:none;font-family:var(--font);font-weight:700;font-size:16px;padding:13px 8px;cursor:pointer;border-radius:7px;transition:filter .15s ease,transform .05s ease}.btn:hover{filter:brightness(1.08)}.btn:active{transform:translateY(1px)}.btn.secondary{background:transparent;color:var(--text-dim);border:2px solid var(--border)}.btn.secondary:hover{color:var(--text);border-color:var(--accent-dim)}.win-banner{display:none;margin-top:12px;text-align:center;font-size:18px;font-weight:800;color:var(--accent);border:2px solid var(--accent-dim);background:rgba(31,138,99,.1);padding:12px;border-radius:8px}.win-banner.show{display:block}.footer-note{margin-top:13px;font-size:13px;color:var(--text-dim);text-align:center;line-height:1.6}.confetti{position:fixed;top:-24px;width:11px;height:18px;opacity:.96;z-index:9999;pointer-events:none;animation:confettiFall linear forwards}@keyframes confettiFall{0%{transform:translate3d(0,-10px,0) rotate(0)}100%{transform:translate3d(var(--drift),110vh,0) rotate(900deg)}}@media(max-width:560px){body{padding:10px 8px}.console{padding:16px 10px}.board{height:270px}.peg-rod{height:200px;width:24px}.disk{height:29px;font-size:14px}.stats{gap:5px}.stat-box{padding:7px 3px;font-size:12px}.stat-box b{font-size:18px}.records{grid-template-columns:1fr}}
+  :root {
+    --bg:#e8ede6; --panel:#f7f4ec; --grid-bg:#ddd6c4; --tile:#fbf9f2;
+    --border:#b9c7c0; --accent:#146c48; --accent-dim:#1f8a63;
+    --text:#1c2a26; --text-dim:#4b5b56; --rod:#8d6e63;
+    --selected:#d27a24; --valid:#2e8b57; --invalid:#b64b3c;
+    --font:"Yu Gothic UI","Meiryo",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font);display:flex;align-items:flex-start;justify-content:center;padding:20px 16px}
+  .console{width:100%;max-width:720px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:22px;box-shadow:0 16px 44px rgba(0,0,0,.14);position:relative;overflow:hidden}
+  h1{font-size:28px;letter-spacing:.04em;margin:0 0 6px;color:var(--accent);font-weight:700;text-align:center}
+  .subtitle{font-size:15px;color:var(--text-dim);margin-bottom:18px;text-align:center}
+  .disk-select{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px}
+  .disk-select label{font-size:16px;color:var(--text-dim);font-weight:600}
+  .disk-select select{font-family:var(--font);font-size:18px;font-weight:700;color:var(--accent);background:var(--tile);border:2px solid var(--border);border-radius:7px;padding:7px 12px;cursor:pointer}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .stat-box{background:var(--tile);border:1px solid var(--border);border-radius:7px;padding:9px 8px;text-align:center;color:var(--text-dim);font-size:14px;font-weight:600}
+  .stat-box b{display:block;margin-top:3px;color:var(--text);font-size:21px}
+  .records{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+  .record-box{background:#eef5f1;border:1px solid var(--border);border-radius:7px;padding:9px 10px;text-align:center;color:var(--text-dim);font-size:14px;font-weight:600}
+  .record-box b{color:var(--accent);font-size:18px;margin-left:5px}
+  .selection-status{min-height:38px;margin-bottom:10px;padding:8px 12px;border:1px solid var(--border);border-radius:7px;background:var(--tile);text-align:center;font-size:15px;font-weight:700;color:var(--text-dim);display:flex;align-items:center;justify-content:center}
+  .selection-status.active{color:#8a4a12;border-color:#d7a060;background:#fff4e7}
+  .board{background:var(--grid-bg);border:1px solid var(--border);border-radius:9px;padding:18px 8px 0;display:flex;justify-content:space-around;align-items:flex-end;height:300px;position:relative;user-select:none}
+  .peg{flex:1;height:100%;display:flex;flex-direction:column-reverse;align-items:center;position:relative;cursor:pointer;padding-bottom:18px;min-width:0;border-radius:9px;outline:3px solid transparent;outline-offset:-4px;transition:background .14s ease,outline-color .14s ease}
+  .peg:hover{background:rgba(255,255,255,.18)}
+  .peg.selected{background:rgba(210,122,36,.12);outline-color:rgba(210,122,36,.75)}
+  .peg.valid-target{background:rgba(46,139,87,.13);outline-color:rgba(46,139,87,.72)}
+  .peg.invalid-target{background:rgba(182,75,60,.10);outline-color:rgba(182,75,60,.62)}
+  .peg-rod{position:absolute;bottom:18px;width:28px;height:225px;background:var(--rod);border:2px solid rgba(60,42,35,.28);border-radius:11px 11px 2px 2px;z-index:1;box-shadow:inset 4px 0 0 rgba(255,255,255,.18)}
+  .peg-base{position:absolute;bottom:0;width:92%;height:18px;background:var(--rod);border:2px solid rgba(60,42,35,.28);border-radius:6px;z-index:1}
+  .peg.selected .peg-rod,.peg.selected .peg-base{background:var(--selected)}
+  .peg.valid-target .peg-rod,.peg.valid-target .peg-base{background:var(--valid)}
+  .peg.invalid-target .peg-rod,.peg.invalid-target .peg-base{background:var(--invalid)}
+  .disk{height:31px;margin-bottom:3px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55);font-weight:800;font-size:15px;z-index:2;border:2px solid rgba(0,0,0,.2);box-shadow:0 3px 5px rgba(0,0,0,.24),inset 0 2px 0 rgba(255,255,255,.24);transition:transform .12s ease,outline .12s ease}
+  .disk.top-disk{cursor:pointer}
+  .peg.selected .disk.top-disk{transform:translateY(-9px);outline:4px solid rgba(210,122,36,.5)}
+  .peg-label{position:absolute;top:-4px;font-size:15px;color:var(--text-dim);font-weight:700;z-index:3}
+  .target-label{position:absolute;top:20px;z-index:4;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:800;display:none}
+  .peg.valid-target .target-label{display:block;background:#e5f5ec;color:#246f47;border:1px solid #73b28e}
+  .peg.invalid-target .target-label{display:block;background:#fae9e6;color:#963b30;border:1px solid #cf8278}
+  .message{min-height:24px;margin-top:10px;text-align:center;color:#a23a2a;font-weight:700;font-size:14px}
+  .controls{display:flex;gap:8px;margin-top:10px}
+  .btn{flex:1;background:var(--accent-dim);color:#fff;border:none;font-family:var(--font);font-weight:700;font-size:16px;padding:13px 8px;cursor:pointer;border-radius:7px;transition:filter .15s ease,transform .05s ease}
+  .btn:hover{filter:brightness(1.08)} .btn:active{transform:translateY(1px)}
+  .btn.secondary{background:transparent;color:var(--text-dim);border:2px solid var(--border)}
+  .btn.secondary:hover{color:var(--text);border-color:var(--accent-dim)}
+  .win-banner{display:none;margin-top:12px;text-align:center;font-size:18px;font-weight:800;color:var(--accent);border:2px solid var(--accent-dim);background:rgba(31,138,99,.1);padding:12px;border-radius:8px}
+  .win-banner.show{display:block}
+  .footer-note{margin-top:13px;font-size:13px;color:var(--text-dim);text-align:center;line-height:1.6}
+  .confetti{position:fixed;top:-24px;width:11px;height:18px;opacity:.96;z-index:9999;pointer-events:none;animation:confettiFall linear forwards}
+  @keyframes confettiFall{0%{transform:translate3d(0,-10px,0) rotate(0)}100%{transform:translate3d(var(--drift),110vh,0) rotate(900deg)}}
+  @media(max-width:560px){body{padding:10px 8px}.console{padding:16px 10px}.board{height:270px}.peg-rod{height:200px;width:24px}.disk{height:29px;font-size:14px}.stats{gap:5px}.stat-box{padding:7px 3px;font-size:12px}.stat-box b{font-size:18px}.records{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="console">
-<h1>ハノイの塔</h1>
-<div class="subtitle">すべての円ばんを、右のはしの棒に移しかえましょう</div>
-<div class="disk-select"><label for="diskCount">円ばんの数：</label><select id="diskCount"><option value="3">3枚</option><option value="4" selected>4枚</option><option value="5">5枚</option><option value="6">6枚</option><option value="7">7枚</option></select></div>
-<div class="stats"><div class="stat-box">手数<b id="moveCount">0</b></div><div class="stat-box">所要時間<b id="elapsedTime">00:00</b></div><div class="stat-box">最小手数<b id="minMoves">15</b></div></div>
-<div class="records"><div class="record-box">手数の記録 <b id="bestMoves">―</b></div><div class="record-box">時間の記録 <b id="bestTime">―</b></div></div>
-<div class="board" id="board"><div class="peg" id="peg0" data-peg="0"><div class="peg-label">A</div><div class="peg-rod"></div><div class="peg-base"></div></div><div class="peg" id="peg1" data-peg="1"><div class="peg-label">B</div><div class="peg-rod"></div><div class="peg-base"></div></div><div class="peg" id="peg2" data-peg="2"><div class="peg-label">C</div><div class="peg-rod"></div><div class="peg-base"></div></div></div>
-<div class="message" id="message" aria-live="polite"></div><div class="win-banner" id="winBanner">完成！ お見事です。</div>
-<div class="controls"><button class="btn" id="newGameBtn" type="button">最初からやり直す</button><button class="btn secondary" id="resetRecordsBtn" type="button">記録を消す</button></div>
-<div class="footer-note">動かしたい円ばんがある棒をクリックし、次に移動先の棒をクリックしてください</div>
+  <h1>ハノイの塔</h1>
+  <div class="subtitle">すべての円ばんを、右のはしの棒に移しかえましょう</div>
+  <div class="disk-select">
+    <label for="diskCount">円ばんの数：</label>
+    <select id="diskCount"><option value="3">3枚</option><option value="4" selected>4枚</option><option value="5">5枚</option><option value="6">6枚</option><option value="7">7枚</option></select>
+  </div>
+  <div class="stats">
+    <div class="stat-box">手数<b id="moveCount">0</b></div>
+    <div class="stat-box">所要時間<b id="elapsedTime">00:00</b></div>
+    <div class="stat-box">最小手数<b id="minMoves">15</b></div>
+  </div>
+  <div class="records">
+    <div class="record-box">手数の記録 <b id="bestMoves">―</b></div>
+    <div class="record-box">時間の記録 <b id="bestTime">―</b></div>
+  </div>
+  <div class="selection-status" id="selectionStatus" aria-live="polite">動かす円ばんがある棒を選んでください</div>
+  <div class="board" id="board">
+    <div class="peg" id="peg0" data-peg="0"><div class="peg-label">A</div><div class="target-label"></div><div class="peg-rod"></div><div class="peg-base"></div></div>
+    <div class="peg" id="peg1" data-peg="1"><div class="peg-label">B</div><div class="target-label"></div><div class="peg-rod"></div><div class="peg-base"></div></div>
+    <div class="peg" id="peg2" data-peg="2"><div class="peg-label">C</div><div class="target-label"></div><div class="peg-rod"></div><div class="peg-base"></div></div>
+  </div>
+  <div class="message" id="message" aria-live="polite"></div>
+  <div class="win-banner" id="winBanner">完成！ お見事です。</div>
+  <div class="controls"><button class="btn" id="newGameBtn" type="button">最初からやり直す</button><button class="btn secondary" id="resetRecordsBtn" type="button">記録を消す</button></div>
+  <div class="footer-note">オレンジは選択中、緑は移動可能、赤は移動できない棒です</div>
 </div>
 <script>
-let numDisks=4,pegs=[[],[],[]],selectedPeg=null,moveCount=0,solved=false,started=false,startTime=0,elapsedSeconds=0,timerId=null,audioContext=null;const diskColors=['#e53935','#fb8c00','#f6bf26','#43a047','#00a6a6','#1e88e5','#7e57c2'];const $=id=>document.getElementById(id);function storageKey(type){return `hanoi_${type}_${numDisks}`}function formatTime(total){const m=Math.floor(total/60),s=total%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}function loadRecords(){const m=localStorage.getItem(storageKey('bestMoves')),t=localStorage.getItem(storageKey('bestTime'));$('bestMoves').textContent=m?`${m}手`:'―';$('bestTime').textContent=t?formatTime(Number(t)):'―'}function saveRecords(){const m=Number(localStorage.getItem(storageKey('bestMoves'))),t=Number(localStorage.getItem(storageKey('bestTime')));if(!m||moveCount<m)localStorage.setItem(storageKey('bestMoves'),String(moveCount));if(!t||elapsedSeconds<t)localStorage.setItem(storageKey('bestTime'),String(elapsedSeconds));loadRecords()}function resetRecords(){if(!confirm(`${numDisks}枚の記録を消しますか？`))return;localStorage.removeItem(storageKey('bestMoves'));localStorage.removeItem(storageKey('bestTime'));loadRecords()}function startTimer(){if(started||solved)return;started=true;startTime=Date.now()-elapsedSeconds*1000;timerId=setInterval(()=>{elapsedSeconds=Math.floor((Date.now()-startTime)/1000);$('elapsedTime').textContent=formatTime(elapsedSeconds)},250)}function stopTimer(){if(timerId){clearInterval(timerId);timerId=null}if(started){elapsedSeconds=Math.floor((Date.now()-startTime)/1000);$('elapsedTime').textContent=formatTime(elapsedSeconds)}}function newGame(){stopTimer();pegs=[[],[],[]];for(let i=numDisks;i>=1;i--)pegs[0].push(i);selectedPeg=null;moveCount=0;solved=false;started=false;elapsedSeconds=0;$('elapsedTime').textContent='00:00';$('winBanner').classList.remove('show');$('message').textContent='';$('minMoves').textContent=Math.pow(2,numDisks)-1;updateStats();loadRecords();render()}function changeDiskCount(){numDisks=parseInt($('diskCount').value,10);newGame()}function render(){for(let p=0;p<3;p++){const pegEl=$('peg'+p);pegEl.querySelectorAll('.disk').forEach(d=>d.remove());pegs[p].forEach(size=>{const div=document.createElement('div');div.className='disk';div.style.width=28+(size/numDisks)*66+'%';div.style.background=diskColors[(size-1)%diskColors.length];div.textContent=size;pegEl.appendChild(div)});pegEl.classList.toggle('selected',selectedPeg===p)}}function pegClick(p){if(solved)return;$('message').textContent='';if(selectedPeg===null){if(pegs[p].length===0){$('message').textContent='この棒には動かせる円ばんがありません。';return}selectedPeg=p;render();return}if(selectedPeg===p){selectedPeg=null;render();return}const from=pegs[selectedPeg],to=pegs[p],moving=from[from.length-1],top=to.length?to[to.length-1]:null;if(top===null||moving<top){startTimer();from.pop();to.push(moving);moveCount++;updateStats();selectedPeg=null;render();checkWin()}else{$('message').textContent='大きい円ばんを小さい円ばんの上には置けません。';selectedPeg=null;render()}}function updateStats(){$('moveCount').textContent=moveCount}function checkWin(){if(pegs[2].length!==numDisks)return;solved=true;stopTimer();saveRecords();const minimum=Math.pow(2,numDisks)-1,praise=moveCount===minimum?'最小手数で完成しました！':`完成！ 最小手数より ${moveCount-minimum} 手多い記録です。`;$('winBanner').textContent=`${praise}　${moveCount}手・${formatTime(elapsedSeconds)}`;$('winBanner').classList.add('show');$('message').textContent='';playFanfare();launchConfetti()}function getAudioContext(){if(!audioContext){const A=window.AudioContext||window.webkitAudioContext;if(A)audioContext=new A}return audioContext}function playTone(ctx,f,start,dur,vol){const o=ctx.createOscillator(),g=ctx.createGain();o.type='triangle';o.frequency.setValueAtTime(f,start);g.gain.setValueAtTime(.001,start);g.gain.exponentialRampToValueAtTime(vol,start+.02);g.gain.exponentialRampToValueAtTime(.001,start+dur);o.connect(g);g.connect(ctx.destination);o.start(start);o.stop(start+dur+.03)}function playFanfare(){const ctx=getAudioContext();if(!ctx)return;if(ctx.state==='suspended')ctx.resume();const now=ctx.currentTime+.04;[[523.25,0,.2],[659.25,.2,.2],[783.99,.4,.24],[1046.5,.66,.55],[783.99,.72,.45],[659.25,.78,.4]].forEach(([f,o,d],i)=>playTone(ctx,f,now+o,d,i>=3?.16:.13))}function launchConfetti(){const colors=diskColors;for(let i=0;i<130;i++){const p=document.createElement('div');p.className='confetti';p.style.left=Math.random()*100+'vw';p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.animationDuration=2.7+Math.random()*2.2+'s';p.style.animationDelay=Math.random()*.55+'s';p.style.setProperty('--drift',(Math.random()-.5)*220+'px');p.style.width=7+Math.random()*8+'px';p.style.height=10+Math.random()*13+'px';p.style.borderRadius=Math.random()>.6?'50%':'2px';document.body.appendChild(p);setTimeout(()=>p.remove(),5600)}}document.querySelectorAll('.peg').forEach(peg=>peg.addEventListener('click',()=>pegClick(Number(peg.dataset.peg))));$('diskCount').addEventListener('change',changeDiskCount);$('newGameBtn').addEventListener('click',newGame);$('resetRecordsBtn').addEventListener('click',resetRecords);newGame();
+  let numDisks=4, pegs=[[],[],[]], selectedPeg=null, moveCount=0, solved=false;
+  let started=false, startTime=0, elapsedSeconds=0, timerId=null, audioContext=null;
+  const diskColors=['#e53935','#fb8c00','#f6bf26','#43a047','#00a6a6','#1e88e5','#7e57c2'];
+  const pegNames=['A','B','C'];
+  const $=id=>document.getElementById(id);
+
+  function storageKey(type){return `hanoi_${type}_${numDisks}`}
+  function formatTime(total){const m=Math.floor(total/60),s=total%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
+  function topDisk(pegIndex){const peg=pegs[pegIndex];return peg.length ? peg[peg.length-1] : null}
+  function canMove(fromIndex,toIndex){
+    if(fromIndex===toIndex) return false;
+    const moving=topDisk(fromIndex), target=topDisk(toIndex);
+    return moving!==null && (target===null || moving<target);
+  }
+  function loadRecords(){const m=localStorage.getItem(storageKey('bestMoves')),t=localStorage.getItem(storageKey('bestTime'));$('bestMoves').textContent=m?`${m}手`:'―';$('bestTime').textContent=t?formatTime(Number(t)):'―'}
+  function saveRecords(){const m=Number(localStorage.getItem(storageKey('bestMoves'))),t=Number(localStorage.getItem(storageKey('bestTime')));if(!m||moveCount<m)localStorage.setItem(storageKey('bestMoves'),String(moveCount));if(!t||elapsedSeconds<t)localStorage.setItem(storageKey('bestTime'),String(elapsedSeconds));loadRecords()}
+  function resetRecords(){if(!confirm(`${numDisks}枚の記録を消しますか？`))return;localStorage.removeItem(storageKey('bestMoves'));localStorage.removeItem(storageKey('bestTime'));loadRecords()}
+  function startTimer(){if(started||solved)return;started=true;startTime=Date.now()-elapsedSeconds*1000;timerId=setInterval(()=>{elapsedSeconds=Math.floor((Date.now()-startTime)/1000);$('elapsedTime').textContent=formatTime(elapsedSeconds)},250)}
+  function stopTimer(){if(timerId){clearInterval(timerId);timerId=null}if(started){elapsedSeconds=Math.floor((Date.now()-startTime)/1000);$('elapsedTime').textContent=formatTime(elapsedSeconds)}}
+
+  function newGame(){
+    stopTimer(); pegs=[[],[],[]]; for(let i=numDisks;i>=1;i--)pegs[0].push(i);
+    selectedPeg=null; moveCount=0; solved=false; started=false; elapsedSeconds=0;
+    $('elapsedTime').textContent='00:00'; $('winBanner').classList.remove('show'); $('message').textContent='';
+    $('minMoves').textContent=Math.pow(2,numDisks)-1; updateStats(); loadRecords(); render();
+  }
+  function changeDiskCount(){numDisks=parseInt($('diskCount').value,10);newGame()}
+
+  function render(){
+    for(let p=0;p<3;p++){
+      const pegEl=$('peg'+p);
+      pegEl.querySelectorAll('.disk').forEach(d=>d.remove());
+      pegs[p].forEach((size,index)=>{
+        const div=document.createElement('div');
+        div.className='disk';
+        if(index===pegs[p].length-1) div.classList.add('top-disk');
+        div.style.width=28+(size/numDisks)*66+'%';
+        div.style.background=diskColors[(size-1)%diskColors.length];
+        div.textContent=size;
+        div.setAttribute('aria-label',`円ばん${size}`);
+        pegEl.appendChild(div);
+      });
+      pegEl.classList.remove('selected','valid-target','invalid-target');
+      const label=pegEl.querySelector('.target-label'); label.textContent='';
+      if(selectedPeg===p){pegEl.classList.add('selected')}
+      else if(selectedPeg!==null){
+        if(canMove(selectedPeg,p)){pegEl.classList.add('valid-target');label.textContent='置けます'}
+        else{pegEl.classList.add('invalid-target');label.textContent='置けません'}
+      }
+    }
+    const status=$('selectionStatus');
+    if(selectedPeg===null){status.textContent='動かす円ばんがある棒を選んでください';status.classList.remove('active')}
+    else{const disk=topDisk(selectedPeg);status.textContent=`円ばん ${disk} を選択中です。移動先の棒を選んでください`;status.classList.add('active')}
+  }
+
+  function pegClick(p){
+    if(solved)return;
+    $('message').textContent='';
+    if(selectedPeg===null){
+      if(topDisk(p)===null){$('message').textContent='この棒には動かせる円ばんがありません。';return}
+      selectedPeg=p; render(); return;
+    }
+    if(selectedPeg===p){selectedPeg=null;render();return}
+
+    const fromIndex=selectedPeg;
+    if(!canMove(fromIndex,p)){
+      const moving=topDisk(fromIndex), target=topDisk(p);
+      $('message').textContent=`円ばん ${moving} は、円ばん ${target} の上には置けません。`;
+      selectedPeg=null; render(); return;
+    }
+
+    const movingDisk=pegs[fromIndex].pop();
+    pegs[p].push(movingDisk);
+    startTimer(); moveCount++; updateStats(); selectedPeg=null; render(); checkWin();
+  }
+
+  function updateStats(){$('moveCount').textContent=moveCount}
+  function checkWin(){
+    if(pegs[2].length!==numDisks)return;
+    solved=true;stopTimer();saveRecords();
+    const minimum=Math.pow(2,numDisks)-1;
+    const praise=moveCount===minimum?'最小手数で完成しました！':`完成！ 最小手数より ${moveCount-minimum} 手多い記録です。`;
+    $('winBanner').textContent=`${praise}　${moveCount}手・${formatTime(elapsedSeconds)}`;
+    $('winBanner').classList.add('show');$('message').textContent='';$('selectionStatus').textContent='完成です！';$('selectionStatus').classList.remove('active');
+    playFanfare();launchConfetti();
+  }
+
+  function getAudioContext(){if(!audioContext){const A=window.AudioContext||window.webkitAudioContext;if(A)audioContext=new A}return audioContext}
+  function playTone(ctx,f,start,dur,vol){const o=ctx.createOscillator(),g=ctx.createGain();o.type='triangle';o.frequency.setValueAtTime(f,start);g.gain.setValueAtTime(.001,start);g.gain.exponentialRampToValueAtTime(vol,start+.02);g.gain.exponentialRampToValueAtTime(.001,start+dur);o.connect(g);g.connect(ctx.destination);o.start(start);o.stop(start+dur+.03)}
+  function playFanfare(){const ctx=getAudioContext();if(!ctx)return;if(ctx.state==='suspended')ctx.resume();const now=ctx.currentTime+.04;[[523.25,0,.2],[659.25,.2,.2],[783.99,.4,.24],[1046.5,.66,.55],[783.99,.72,.45],[659.25,.78,.4]].forEach(([f,o,d],i)=>playTone(ctx,f,now+o,d,i>=3?.16:.13))}
+  function launchConfetti(){for(let i=0;i<130;i++){const p=document.createElement('div');p.className='confetti';p.style.left=Math.random()*100+'vw';p.style.background=diskColors[Math.floor(Math.random()*diskColors.length)];p.style.animationDuration=2.7+Math.random()*2.2+'s';p.style.animationDelay=Math.random()*.55+'s';p.style.setProperty('--drift',(Math.random()-.5)*220+'px');p.style.width=7+Math.random()*8+'px';p.style.height=10+Math.random()*13+'px';p.style.borderRadius=Math.random()>.6?'50%':'2px';document.body.appendChild(p);setTimeout(()=>p.remove(),5600)}}
+
+  document.querySelectorAll('.peg').forEach(peg=>peg.addEventListener('click',()=>pegClick(Number(peg.dataset.peg))));
+  $('diskCount').addEventListener('change',changeDiskCount);
+  $('newGameBtn').addEventListener('click',newGame);
+  $('resetRecordsBtn').addEventListener('click',resetRecords);
+  newGame();
 </script>
 </body>
 </html>
