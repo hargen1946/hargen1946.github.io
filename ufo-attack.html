@@ -17,6 +17,48 @@
     .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,7,18,.82);z-index:4}.overlay[hidden]{display:none}.overlay-box{width:min(620px,96%);background:#10233a;border:3px solid #8fb3cf;border-radius:20px;padding:20px}.overlay h2{margin:0 0 8px;font-size:clamp(30px,6vw,48px)}.overlay p{margin:8px 0;font-size:clamp(19px,3.5vw,24px);line-height:1.55}
     .message{min-height:34px;margin-top:10px;font-size:22px;font-weight:800;color:#5ee6ff}.controls{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:12px;margin-top:14px}.control-btn{min-height:74px;font-size:28px;background:#d9eaf7;color:#10233a;border:3px solid #fff;user-select:none}.fire-btn{background:var(--accent);color:#1d2000}.instructions{text-align:left;font-size:20px;line-height:1.65}.instructions strong{color:var(--accent)}.small{color:var(--sub);font-size:17px;line-height:1.5}.hidden{display:none!important}
     @media(max-width:700px){.settings{grid-template-columns:1fr}.hud{grid-template-columns:repeat(2,minmax(0,1fr))}.page{padding-left:8px;padding-right:8px}.card{padding:12px}.game-wrap{min-height:330px}.control-btn{min-height:68px}}
+
+
+    /* ===== ゲームひろば・13インチノート向けコンパクト版 ===== */
+    body{min-height:100vh}
+    .page{width:min(700px,100%);padding:6px 8px 14px}
+    .back-link{margin:0 0 4px;padding:7px 12px;border-radius:10px;font-size:16px}
+    h1{margin:1px 0 2px;font-size:30px;line-height:1.15}
+    .subtitle{margin:0 0 6px;font-size:16px;line-height:1.35}
+    .card{padding:8px;margin:6px auto;border-radius:12px}
+    .settings{gap:8px}
+    label{font-size:16px;margin-bottom:3px}
+    select{min-height:38px;padding:5px 8px;font-size:16px;border-radius:9px}
+    .start-row{margin-top:8px;gap:8px}
+    button{min-height:42px;padding:7px 16px;font-size:17px;border-radius:10px}
+    .primary{min-width:160px}
+    .small{margin:6px 0 0;font-size:14px;line-height:1.35}
+    .hud{gap:6px;margin-bottom:6px}
+    .stat{padding:4px 4px;border-radius:9px}
+    .stat .label{font-size:13px}
+    .stat .value{font-size:21px}
+    .game-wrap{width:min(560px,100%);margin:0 auto;aspect-ratio:4/3;max-height:none;min-height:0;border-width:2px;border-radius:11px}
+    .overlay{padding:10px}
+    .overlay-box{width:min(470px,94%);padding:13px;border-radius:14px}
+    .overlay h2{font-size:30px}
+    .overlay p{font-size:17px;line-height:1.4}
+    .message{min-height:24px;margin-top:5px;font-size:16px}
+    .controls{width:min(560px,100%);margin:6px auto 0;gap:7px}
+    .control-btn{min-height:48px;font-size:20px;border-width:2px}
+    .instructions{font-size:16px;line-height:1.5;padding:10px 12px}
+    @media(max-width:700px){
+      .settings{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .hud{grid-template-columns:repeat(4,minmax(0,1fr))}
+      .page{padding-left:5px;padding-right:5px}
+      .card{padding:7px}
+      .game-wrap{width:min(96vw,560px)}
+      .control-btn{min-height:46px}
+    }
+    @media(max-width:480px){
+      .settings{grid-template-columns:1fr}
+      .hud{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+
   </style>
 </head>
 <body>
@@ -47,14 +89,14 @@ const scoreE=$('score'),hiE=$('highScore'),remE=$('remaining'),livesE=$('lives')
 const W=800,H=600,enemySpeeds={verySlow:18,slow:26,normal:38},playerSpeeds={slow:210,normal:285,fast:360};let state='ready',score=0,lives=3,hi=Number(localStorage.getItem('ufoDefenseHighScore')||0),sound=true,player,bullets=[],eBullets=[],ufos=[],parts=[],dir=1,eSpeed=26,pSpeed=285,eTimer=0,eInterval=2.8,cool=0,inv=0,last=0,anim=null,keys={left:false,right:false};hiE.textContent=hi;
 function resize(){const r=c.getBoundingClientRect(),d=Math.max(1,devicePixelRatio||1);c.width=Math.round(r.width*d);c.height=Math.round(r.height*d);x.setTransform(c.width/W,0,0,c.height/H,0,0)}
 function reset(){score=0;lives=3;bullets=[];eBullets=[];parts=[];dir=1;eSpeed=enemySpeeds[enemySel.value];pSpeed=playerSpeeds[playerSel.value];eInterval=enemySel.value==='verySlow'?3.3:enemySel.value==='slow'?2.8:2.3;eTimer=0;cool=0;inv=0;player={x:W/2-34,y:H-72,w:68,h:34};ufos=[];let rows=3,cols=6,uw=74,uh=38,gx=24,gy=25,total=cols*uw+(cols-1)*gx,sx=(W-total)/2,sy=82;for(let r=0;r<rows;r++)for(let k=0;k<cols;k++)ufos.push({x:sx+k*(uw+gx),y:sy+r*(uh+gy),w:uw,h:uh,alive:true,wobble:Math.random()*Math.PI*2});hud()}
-function start(){reset();state='playing';overlay.hidden=true;setup.classList.add('hidden');msg.textContent='UFOをねらってください。';last=performance.now();if(anim)cancelAnimationFrame(anim);anim=requestAnimationFrame(loop);tone(440,.08,'square',.05)}
+function start(){reset();state='playing';overlay.hidden=true;setup.classList.add('hidden');msg.textContent='UFOをねらってください。';last=performance.now();if(anim)cancelAnimationFrame(anim);anim=requestAnimationFrame(loop);tone(440,.12,'square',.11)}
 function end(win){state=win?'won':'lost';if(score>hi){hi=score;localStorage.setItem('ufoDefenseHighScore',String(hi));hiE.textContent=hi}if(win){confetti();winSound();oTitle.textContent='ゲームクリア！';oText.textContent=`おめでとうございます。得点は ${score} 点です。`;msg.textContent='UFOを全部倒しました！'}else{loseSound();oTitle.textContent='ゲーム終了';oText.textContent=`今回の得点は ${score} 点です。`;msg.textContent='おつかれさまでした。'}oBtn.textContent='もう一度遊ぶ';overlay.hidden=false;setup.classList.remove('hidden')}
 function hud(){scoreE.textContent=score;hiE.textContent=hi;remE.textContent=ufos.filter(u=>u.alive).length;livesE.textContent=lives}
-function fire(){if(state!=='playing'||cool>0)return;bullets.push({x:player.x+player.w/2-4,y:player.y-14,w:8,h:18,speed:520});cool=.32;tone(700,.05,'square',.035)}
+function fire(){if(state!=='playing'||cool>0)return;bullets.push({x:player.x+player.w/2-4,y:player.y-14,w:8,h:18,speed:520});cool=.32;tone(700,.07,'square',.08)}
 function eFire(){const a=ufos.filter(u=>u.alive);if(!a.length)return;const s=a[Math.floor(Math.random()*a.length)];eBullets.push({x:s.x+s.w/2-4,y:s.y+s.h,w:8,h:18,speed:175})}
 function hit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
-function damage(){lives--;inv=1.5;tone(90,.22,'sawtooth',.07);hud();if(lives<=0)end(false);else{msg.textContent=`自機が当たりました。残り ${lives} 機です。`;setTimeout(()=>{if(state==='playing')msg.textContent='UFOをねらってください。'},1400)}}
-function update(dt){if(state!=='playing')return;if(keys.left)player.x-=pSpeed*dt;if(keys.right)player.x+=pSpeed*dt;player.x=Math.max(8,Math.min(W-player.w-8,player.x));cool=Math.max(0,cool-dt);inv=Math.max(0,inv-dt);bullets.forEach(b=>b.y-=b.speed*dt);bullets=bullets.filter(b=>b.y+b.h>0);eBullets.forEach(b=>b.y+=b.speed*dt);eBullets=eBullets.filter(b=>b.y<H+30);let min=Infinity,max=-Infinity,maxY=0;ufos.forEach(u=>{if(!u.alive)return;u.x+=eSpeed*dir*dt;u.wobble+=dt*4;min=Math.min(min,u.x);max=Math.max(max,u.x+u.w);maxY=Math.max(maxY,u.y+u.h)});if(min<18||max>W-18){dir*=-1;ufos.forEach(u=>{if(u.alive){u.x=Math.max(18,Math.min(W-u.w-18,u.x));u.y+=20}})}eTimer+=dt;if(eTimer>=eInterval){eTimer=0;eFire()}for(const b of bullets){for(const u of ufos){if(u.alive&&hit(b,u)){u.alive=false;b.y=-100;score+=100;explode(u.x+u.w/2,u.y+u.h/2);tone(240,.08,'sawtooth',.05);hud();break}}}bullets=bullets.filter(b=>b.y>-50);if(inv<=0){for(const b of eBullets){if(hit(b,player)){b.y=H+100;damage();break}}}parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.vy+=70*dt});parts=parts.filter(p=>p.life>0);if(ufos.every(u=>!u.alive)){end(true);return}if(maxY>player.y-20)end(false)}
+function damage(){lives--;inv=1.5;tone(90,.26,'sawtooth',.12);hud();if(lives<=0)end(false);else{msg.textContent=`自機が当たりました。残り ${lives} 機です。`;setTimeout(()=>{if(state==='playing')msg.textContent='UFOをねらってください。'},1400)}}
+function update(dt){if(state!=='playing')return;if(keys.left)player.x-=pSpeed*dt;if(keys.right)player.x+=pSpeed*dt;player.x=Math.max(8,Math.min(W-player.w-8,player.x));cool=Math.max(0,cool-dt);inv=Math.max(0,inv-dt);bullets.forEach(b=>b.y-=b.speed*dt);bullets=bullets.filter(b=>b.y+b.h>0);eBullets.forEach(b=>b.y+=b.speed*dt);eBullets=eBullets.filter(b=>b.y<H+30);let min=Infinity,max=-Infinity,maxY=0;ufos.forEach(u=>{if(!u.alive)return;u.x+=eSpeed*dir*dt;u.wobble+=dt*4;min=Math.min(min,u.x);max=Math.max(max,u.x+u.w);maxY=Math.max(maxY,u.y+u.h)});if(min<18||max>W-18){dir*=-1;ufos.forEach(u=>{if(u.alive){u.x=Math.max(18,Math.min(W-u.w-18,u.x));u.y+=20}})}eTimer+=dt;if(eTimer>=eInterval){eTimer=0;eFire()}for(const b of bullets){for(const u of ufos){if(u.alive&&hit(b,u)){u.alive=false;b.y=-100;score+=100;explode(u.x+u.w/2,u.y+u.h/2);tone(240,.10,'sawtooth',.10);hud();break}}}bullets=bullets.filter(b=>b.y>-50);if(inv<=0){for(const b of eBullets){if(hit(b,player)){b.y=H+100;damage();break}}}parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.vy+=70*dt});parts=parts.filter(p=>p.life>0);if(ufos.every(u=>!u.alive)){end(true);return}if(maxY>player.y-20)end(false)}
 function bg(){x.fillStyle='#020712';x.fillRect(0,0,W,H);x.fillStyle='#fff';for(let i=0;i<55;i++){let px=(i*149)%W,py=(i*83)%(H-90),s=i%5===0?2.5:1.3;x.globalAlpha=.35+(i%4)*.13;x.fillRect(px,py,s,s)}x.globalAlpha=1;x.strokeStyle='#31577a';x.lineWidth=3;x.beginPath();x.moveTo(0,H-28);x.lineTo(W,H-28);x.stroke()}
 function drawU(u){if(!u.alive)return;let y=u.y+Math.sin(u.wobble)*2;x.save();x.translate(u.x,y);x.fillStyle='#8af0ff';x.beginPath();x.ellipse(u.w/2,13,24,13,0,0,Math.PI*2);x.fill();x.fillStyle='#e8fdff';x.beginPath();x.ellipse(u.w/2,10,13,8,0,0,Math.PI*2);x.fill();x.fillStyle='#8c62ff';x.beginPath();x.ellipse(u.w/2,25,u.w/2,13,0,0,Math.PI*2);x.fill();x.strokeStyle='#fff';x.lineWidth=3;x.stroke();x.fillStyle='#fff36a';for(let i=0;i<4;i++){x.beginPath();x.arc(14+i*15,26,3.2,0,Math.PI*2);x.fill()}x.restore()}
 function drawP(){if(!player)return;if(inv>0&&Math.floor(inv*10)%2===0)return;x.save();x.translate(player.x,player.y);x.fillStyle='#69ff9a';x.fillRect(9,18,player.w-18,14);x.fillStyle='#d8fff0';x.fillRect(player.w/2-8,3,16,18);x.fillStyle='#34c86b';x.beginPath();x.moveTo(0,player.h);x.lineTo(15,14);x.lineTo(player.w-15,14);x.lineTo(player.w,player.h);x.closePath();x.fill();x.strokeStyle='#fff';x.lineWidth=3;x.strokeRect(9,18,player.w-18,14);x.restore()}
@@ -63,8 +105,8 @@ function draw(){x.clearRect(0,0,W,H);bg();ufos.forEach(drawU);x.fillStyle='#fff4
 function explode(px,py){for(let i=0;i<18;i++)parts.push({x:px,y:py,vx:(Math.random()-.5)*180,vy:(Math.random()-.5)*180,life:.45+Math.random()*.35,size:3+Math.random()*5,kind:'spark'})}
 function confetti(){parts=[];for(let i=0;i<160;i++)parts.push({x:Math.random()*W,y:-20-Math.random()*280,vx:(Math.random()-.5)*80,vy:60+Math.random()*110,life:4+Math.random()*2,size:5+Math.random()*7,kind:'confetti',hue:Math.random()*360});function celebrate(){let dt=1/60;parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.vy+=20*dt});parts=parts.filter(p=>p.life>0&&p.y<H+30);draw();if(parts.length&&state==='won')requestAnimationFrame(celebrate)}requestAnimationFrame(celebrate)}
 function loop(t){let dt=Math.min(.035,(t-last)/1000||0);last=t;update(dt);draw();if(state==='playing')anim=requestAnimationFrame(loop)}
-let ac=null;function audio(){if(!ac){const A=window.AudioContext||window.webkitAudioContext;if(A)ac=new A()}if(ac&&ac.state==='suspended')ac.resume()}function tone(f,d,type,v){if(!sound)return;audio();if(!ac)return;let o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;o.type=type||'sine';g.gain.value=v||.04;o.connect(g);g.connect(ac.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);o.stop(ac.currentTime+d)}function winSound(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.18,'square',.055),i*150))}function loseSound(){[260,200,150].forEach((f,i)=>setTimeout(()=>tone(f,.22,'sawtooth',.05),i*180))}
-function hold(btn,key){const s=e=>{e.preventDefault();keys[key]=true;audio()},z=e=>{e.preventDefault();keys[key]=false};btn.addEventListener('pointerdown',s);btn.addEventListener('pointerup',z);btn.addEventListener('pointercancel',z);btn.addEventListener('pointerleave',z)}hold($('leftButton'),'left');hold($('rightButton'),'right');$('fireButton').addEventListener('pointerdown',e=>{e.preventDefault();fire()});$('startButton').onclick=start;oBtn.onclick=start;$('soundButton').onclick=()=>{sound=!sound;$('soundButton').textContent=sound?'音：あり':'音：なし';$('soundButton').setAttribute('aria-pressed',String(sound));if(sound)tone(520,.08,'sine',.04)};
+let ac=null,master=null;function audio(){if(!ac){const A=window.AudioContext||window.webkitAudioContext;if(A){ac=new A();master=ac.createGain();master.gain.value=.95;master.connect(ac.destination)}}if(ac&&ac.state==='suspended')ac.resume()}function tone(f,d,type,v){if(!sound)return;audio();if(!ac||!master)return;let o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;o.type=type||'sine';const vol=Math.min(.3,(v||.04)*2.8);g.gain.setValueAtTime(vol,ac.currentTime);o.connect(g);g.connect(master);o.start();g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);o.stop(ac.currentTime+d+.02)}function winSound(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.22,'square',.09),i*150))}function loseSound(){[260,200,150].forEach((f,i)=>setTimeout(()=>tone(f,.26,'sawtooth',.085),i*180))}
+function hold(btn,key){const s=e=>{e.preventDefault();keys[key]=true;audio()},z=e=>{e.preventDefault();keys[key]=false};btn.addEventListener('pointerdown',s);btn.addEventListener('pointerup',z);btn.addEventListener('pointercancel',z);btn.addEventListener('pointerleave',z)}hold($('leftButton'),'left');hold($('rightButton'),'right');$('fireButton').addEventListener('pointerdown',e=>{e.preventDefault();fire()});$('startButton').onclick=start;oBtn.onclick=start;$('soundButton').onclick=()=>{sound=!sound;$('soundButton').textContent=sound?'音：あり':'音：なし';$('soundButton').setAttribute('aria-pressed',String(sound));if(sound)tone(520,.14,'sine',.12)};
 addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();if(e.code==='ArrowLeft')keys.left=true;if(e.code==='ArrowRight')keys.right=true;if(e.code==='Space')fire();if(e.code==='Enter'&&state!=='playing')start()});addEventListener('keyup',e=>{if(e.code==='ArrowLeft')keys.left=false;if(e.code==='ArrowRight')keys.right=false});addEventListener('blur',()=>{keys.left=keys.right=false});addEventListener('resize',()=>{resize();draw()});reset();resize();draw();
 })();
 </script>
