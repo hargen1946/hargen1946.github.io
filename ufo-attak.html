@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>UFOディフェンス｜ゲームひろば</title>
+  <style>
+    :root{--bg:#07111f;--panel:#10233a;--text:#f5fbff;--sub:#c8d9e8;--accent:#ffd54a;--border:#5f7f9c}
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;background:linear-gradient(#06101d,#0b1a2c 45%,#07111f);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Yu Gothic","Meiryo",sans-serif;text-align:center}
+    .page{width:min(980px,100%);margin:0 auto;padding:16px 14px 28px}.back-link{display:inline-block;margin:0 0 10px;padding:12px 18px;border:2px solid var(--border);border-radius:14px;color:var(--text);background:#11263d;text-decoration:none;font-size:20px;font-weight:700}
+    h1{margin:6px 0;font-size:clamp(30px,6vw,48px);letter-spacing:.05em}.subtitle{margin:0 0 16px;color:var(--sub);font-size:clamp(18px,3.6vw,24px);line-height:1.6}
+    .card{background:rgba(16,35,58,.96);border:2px solid var(--border);border-radius:18px;padding:16px;margin:14px auto;box-shadow:0 8px 22px rgba(0,0,0,.28)}
+    .settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;text-align:left}label{display:block;font-size:21px;font-weight:800;margin-bottom:7px}select{width:100%;min-height:52px;border:2px solid var(--border);border-radius:12px;padding:8px 12px;background:#081827;color:var(--text);font-size:21px;font-weight:700}
+    .start-row{margin-top:16px;display:flex;flex-wrap:wrap;gap:12px;justify-content:center}button{min-height:56px;border:none;border-radius:14px;padding:12px 24px;font-size:22px;font-weight:900;cursor:pointer;touch-action:manipulation}button:focus,select:focus,a:focus{outline:4px solid #fff;outline-offset:3px}.primary{background:var(--accent);color:#182000;min-width:210px}.secondary{background:#d8e9f7;color:#132030}
+    .hud{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}.stat{background:#0a1a2b;border:2px solid var(--border);border-radius:14px;padding:9px 8px}.stat .label{color:var(--sub);font-size:16px;font-weight:700}.stat .value{margin-top:2px;font-size:26px;font-weight:900}
+    .game-wrap{position:relative;width:100%;aspect-ratio:4/3;max-height:72vh;min-height:360px;border:3px solid #8fb3cf;border-radius:16px;overflow:hidden;background:#020712}canvas{display:block;width:100%;height:100%;background:#020712;touch-action:none}
+    .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,7,18,.82);z-index:4}.overlay[hidden]{display:none}.overlay-box{width:min(620px,96%);background:#10233a;border:3px solid #8fb3cf;border-radius:20px;padding:20px}.overlay h2{margin:0 0 8px;font-size:clamp(30px,6vw,48px)}.overlay p{margin:8px 0;font-size:clamp(19px,3.5vw,24px);line-height:1.55}
+    .message{min-height:34px;margin-top:10px;font-size:22px;font-weight:800;color:#5ee6ff}.controls{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:12px;margin-top:14px}.control-btn{min-height:74px;font-size:28px;background:#d9eaf7;color:#10233a;border:3px solid #fff;user-select:none}.fire-btn{background:var(--accent);color:#1d2000}.instructions{text-align:left;font-size:20px;line-height:1.65}.instructions strong{color:var(--accent)}.small{color:var(--sub);font-size:17px;line-height:1.5}.hidden{display:none!important}
+    @media(max-width:700px){.settings{grid-template-columns:1fr}.hud{grid-template-columns:repeat(2,minmax(0,1fr))}.page{padding-left:8px;padding-right:8px}.card{padding:12px}.game-wrap{min-height:330px}.control-btn{min-height:68px}}
+  </style>
+</head>
+<body>
+<main class="page">
+  <a class="back-link" href="../">← ゲームひろばへ戻る</a>
+  <h1>UFOディフェンス</h1>
+  <p class="subtitle">ゆっくり遊べる、一画面完結のシューティングゲームです。</p>
+  <section id="setupCard" class="card">
+    <div class="settings">
+      <div><label for="enemySpeed">UFOの速さ</label><select id="enemySpeed"><option value="verySlow">とてもゆっくり</option><option value="slow" selected>ゆっくり</option><option value="normal">ふつう</option></select></div>
+      <div><label for="playerSpeed">自機の速さ</label><select id="playerSpeed"><option value="slow">ゆっくり</option><option value="normal" selected>ふつう</option><option value="fast">少し速い</option></select></div>
+    </div>
+    <div class="start-row"><button id="startButton" class="primary">ゲーム開始</button><button id="soundButton" class="secondary" aria-pressed="true">音：あり</button></div>
+    <p class="small">UFOを全部倒すとクリアです。ステージは1画面だけです。</p>
+  </section>
+  <section class="card">
+    <div class="hud"><div class="stat"><div class="label">得点</div><div id="score" class="value">0</div></div><div class="stat"><div class="label">最高得点</div><div id="highScore" class="value">0</div></div><div class="stat"><div class="label">残りUFO</div><div id="remaining" class="value">18</div></div><div class="stat"><div class="label">残り自機</div><div id="lives" class="value">3</div></div></div>
+    <div class="game-wrap"><canvas id="gameCanvas" width="800" height="600"></canvas><div id="overlay" class="overlay"><div class="overlay-box"><h2 id="overlayTitle">準備できました</h2><p id="overlayText">上の設定を選び、「ゲーム開始」を押してください。</p><button id="overlayButton" class="primary">ゲーム開始</button></div></div></div>
+    <div id="message" class="message" aria-live="polite">左右に動いて、UFOをねらいましょう。</div>
+    <div class="controls"><button id="leftButton" class="control-btn">◀ 左</button><button id="fireButton" class="control-btn fire-btn">発射</button><button id="rightButton" class="control-btn">右 ▶</button></div>
+  </section>
+  <section class="card instructions"><strong>遊び方</strong><br>① 左右ボタン、またはキーボードの「←」「→」で自機を動かします。<br>② 「発射」ボタン、またはスペースキーで弾を撃ちます。<br>③ UFOをすべて倒せばゲームクリアです。<br>④ UFOが下まで来るか、自機が3回当たるとゲーム終了です。</section>
+</main>
+<script>
+(()=>{'use strict';
+const c=document.getElementById('gameCanvas'),x=c.getContext('2d');const $=id=>document.getElementById(id);
+const scoreE=$('score'),hiE=$('highScore'),remE=$('remaining'),livesE=$('lives'),msg=$('message'),setup=$('setupCard'),enemySel=$('enemySpeed'),playerSel=$('playerSpeed'),overlay=$('overlay'),oTitle=$('overlayTitle'),oText=$('overlayText'),oBtn=$('overlayButton');
+const W=800,H=600,enemySpeeds={verySlow:18,slow:26,normal:38},playerSpeeds={slow:210,normal:285,fast:360};let state='ready',score=0,lives=3,hi=Number(localStorage.getItem('ufoDefenseHighScore')||0),sound=true,player,bullets=[],eBullets=[],ufos=[],parts=[],dir=1,eSpeed=26,pSpeed=285,eTimer=0,eInterval=2.8,cool=0,inv=0,last=0,anim=null,keys={left:false,right:false};hiE.textContent=hi;
+function resize(){const r=c.getBoundingClientRect(),d=Math.max(1,devicePixelRatio||1);c.width=Math.round(r.width*d);c.height=Math.round(r.height*d);x.setTransform(c.width/W,0,0,c.height/H,0,0)}
+function reset(){score=0;lives=3;bullets=[];eBullets=[];parts=[];dir=1;eSpeed=enemySpeeds[enemySel.value];pSpeed=playerSpeeds[playerSel.value];eInterval=enemySel.value==='verySlow'?3.3:enemySel.value==='slow'?2.8:2.3;eTimer=0;cool=0;inv=0;player={x:W/2-34,y:H-72,w:68,h:34};ufos=[];let rows=3,cols=6,uw=74,uh=38,gx=24,gy=25,total=cols*uw+(cols-1)*gx,sx=(W-total)/2,sy=82;for(let r=0;r<rows;r++)for(let k=0;k<cols;k++)ufos.push({x:sx+k*(uw+gx),y:sy+r*(uh+gy),w:uw,h:uh,alive:true,wobble:Math.random()*Math.PI*2});hud()}
+function start(){reset();state='playing';overlay.hidden=true;setup.classList.add('hidden');msg.textContent='UFOをねらってください。';last=performance.now();if(anim)cancelAnimationFrame(anim);anim=requestAnimationFrame(loop);tone(440,.08,'square',.05)}
+function end(win){state=win?'won':'lost';if(score>hi){hi=score;localStorage.setItem('ufoDefenseHighScore',String(hi));hiE.textContent=hi}if(win){confetti();winSound();oTitle.textContent='ゲームクリア！';oText.textContent=`おめでとうございます。得点は ${score} 点です。`;msg.textContent='UFOを全部倒しました！'}else{loseSound();oTitle.textContent='ゲーム終了';oText.textContent=`今回の得点は ${score} 点です。`;msg.textContent='おつかれさまでした。'}oBtn.textContent='もう一度遊ぶ';overlay.hidden=false;setup.classList.remove('hidden')}
+function hud(){scoreE.textContent=score;hiE.textContent=hi;remE.textContent=ufos.filter(u=>u.alive).length;livesE.textContent=lives}
+function fire(){if(state!=='playing'||cool>0)return;bullets.push({x:player.x+player.w/2-4,y:player.y-14,w:8,h:18,speed:520});cool=.32;tone(700,.05,'square',.035)}
+function eFire(){const a=ufos.filter(u=>u.alive);if(!a.length)return;const s=a[Math.floor(Math.random()*a.length)];eBullets.push({x:s.x+s.w/2-4,y:s.y+s.h,w:8,h:18,speed:175})}
+function hit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
+function damage(){lives--;inv=1.5;tone(90,.22,'sawtooth',.07);hud();if(lives<=0)end(false);else{msg.textContent=`自機が当たりました。残り ${lives} 機です。`;setTimeout(()=>{if(state==='playing')msg.textContent='UFOをねらってください。'},1400)}}
+function update(dt){if(state!=='playing')return;if(keys.left)player.x-=pSpeed*dt;if(keys.right)player.x+=pSpeed*dt;player.x=Math.max(8,Math.min(W-player.w-8,player.x));cool=Math.max(0,cool-dt);inv=Math.max(0,inv-dt);bullets.forEach(b=>b.y-=b.speed*dt);bullets=bullets.filter(b=>b.y+b.h>0);eBullets.forEach(b=>b.y+=b.speed*dt);eBullets=eBullets.filter(b=>b.y<H+30);let min=Infinity,max=-Infinity,maxY=0;ufos.forEach(u=>{if(!u.alive)return;u.x+=eSpeed*dir*dt;u.wobble+=dt*4;min=Math.min(min,u.x);max=Math.max(max,u.x+u.w);maxY=Math.max(maxY,u.y+u.h)});if(min<18||max>W-18){dir*=-1;ufos.forEach(u=>{if(u.alive){u.x=Math.max(18,Math.min(W-u.w-18,u.x));u.y+=20}})}eTimer+=dt;if(eTimer>=eInterval){eTimer=0;eFire()}for(const b of bullets){for(const u of ufos){if(u.alive&&hit(b,u)){u.alive=false;b.y=-100;score+=100;explode(u.x+u.w/2,u.y+u.h/2);tone(240,.08,'sawtooth',.05);hud();break}}}bullets=bullets.filter(b=>b.y>-50);if(inv<=0){for(const b of eBullets){if(hit(b,player)){b.y=H+100;damage();break}}}parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.vy+=70*dt});parts=parts.filter(p=>p.life>0);if(ufos.every(u=>!u.alive)){end(true);return}if(maxY>player.y-20)end(false)}
+function bg(){x.fillStyle='#020712';x.fillRect(0,0,W,H);x.fillStyle='#fff';for(let i=0;i<55;i++){let px=(i*149)%W,py=(i*83)%(H-90),s=i%5===0?2.5:1.3;x.globalAlpha=.35+(i%4)*.13;x.fillRect(px,py,s,s)}x.globalAlpha=1;x.strokeStyle='#31577a';x.lineWidth=3;x.beginPath();x.moveTo(0,H-28);x.lineTo(W,H-28);x.stroke()}
+function drawU(u){if(!u.alive)return;let y=u.y+Math.sin(u.wobble)*2;x.save();x.translate(u.x,y);x.fillStyle='#8af0ff';x.beginPath();x.ellipse(u.w/2,13,24,13,0,0,Math.PI*2);x.fill();x.fillStyle='#e8fdff';x.beginPath();x.ellipse(u.w/2,10,13,8,0,0,Math.PI*2);x.fill();x.fillStyle='#8c62ff';x.beginPath();x.ellipse(u.w/2,25,u.w/2,13,0,0,Math.PI*2);x.fill();x.strokeStyle='#fff';x.lineWidth=3;x.stroke();x.fillStyle='#fff36a';for(let i=0;i<4;i++){x.beginPath();x.arc(14+i*15,26,3.2,0,Math.PI*2);x.fill()}x.restore()}
+function drawP(){if(!player)return;if(inv>0&&Math.floor(inv*10)%2===0)return;x.save();x.translate(player.x,player.y);x.fillStyle='#69ff9a';x.fillRect(9,18,player.w-18,14);x.fillStyle='#d8fff0';x.fillRect(player.w/2-8,3,16,18);x.fillStyle='#34c86b';x.beginPath();x.moveTo(0,player.h);x.lineTo(15,14);x.lineTo(player.w-15,14);x.lineTo(player.w,player.h);x.closePath();x.fill();x.strokeStyle='#fff';x.lineWidth=3;x.strokeRect(9,18,player.w-18,14);x.restore()}
+function drawParts(){parts.forEach(p=>{x.fillStyle=p.kind==='confetti'?`hsl(${p.hue} 90% 60%)`:(p.life>.35?'#fff36a':'#ff7a4f');x.fillRect(p.x,p.y,p.size,p.kind==='confetti'?p.size*1.6:p.size)})}
+function draw(){x.clearRect(0,0,W,H);bg();ufos.forEach(drawU);x.fillStyle='#fff45c';bullets.forEach(b=>x.fillRect(b.x,b.y,b.w,b.h));x.fillStyle='#ff6b6b';eBullets.forEach(b=>x.fillRect(b.x,b.y,b.w,b.h));drawP();drawParts()}
+function explode(px,py){for(let i=0;i<18;i++)parts.push({x:px,y:py,vx:(Math.random()-.5)*180,vy:(Math.random()-.5)*180,life:.45+Math.random()*.35,size:3+Math.random()*5,kind:'spark'})}
+function confetti(){parts=[];for(let i=0;i<160;i++)parts.push({x:Math.random()*W,y:-20-Math.random()*280,vx:(Math.random()-.5)*80,vy:60+Math.random()*110,life:4+Math.random()*2,size:5+Math.random()*7,kind:'confetti',hue:Math.random()*360});function celebrate(){let dt=1/60;parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.vy+=20*dt});parts=parts.filter(p=>p.life>0&&p.y<H+30);draw();if(parts.length&&state==='won')requestAnimationFrame(celebrate)}requestAnimationFrame(celebrate)}
+function loop(t){let dt=Math.min(.035,(t-last)/1000||0);last=t;update(dt);draw();if(state==='playing')anim=requestAnimationFrame(loop)}
+let ac=null;function audio(){if(!ac){const A=window.AudioContext||window.webkitAudioContext;if(A)ac=new A()}if(ac&&ac.state==='suspended')ac.resume()}function tone(f,d,type,v){if(!sound)return;audio();if(!ac)return;let o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;o.type=type||'sine';g.gain.value=v||.04;o.connect(g);g.connect(ac.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);o.stop(ac.currentTime+d)}function winSound(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.18,'square',.055),i*150))}function loseSound(){[260,200,150].forEach((f,i)=>setTimeout(()=>tone(f,.22,'sawtooth',.05),i*180))}
+function hold(btn,key){const s=e=>{e.preventDefault();keys[key]=true;audio()},z=e=>{e.preventDefault();keys[key]=false};btn.addEventListener('pointerdown',s);btn.addEventListener('pointerup',z);btn.addEventListener('pointercancel',z);btn.addEventListener('pointerleave',z)}hold($('leftButton'),'left');hold($('rightButton'),'right');$('fireButton').addEventListener('pointerdown',e=>{e.preventDefault();fire()});$('startButton').onclick=start;oBtn.onclick=start;$('soundButton').onclick=()=>{sound=!sound;$('soundButton').textContent=sound?'音：あり':'音：なし';$('soundButton').setAttribute('aria-pressed',String(sound));if(sound)tone(520,.08,'sine',.04)};
+addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();if(e.code==='ArrowLeft')keys.left=true;if(e.code==='ArrowRight')keys.right=true;if(e.code==='Space')fire();if(e.code==='Enter'&&state!=='playing')start()});addEventListener('keyup',e=>{if(e.code==='ArrowLeft')keys.left=false;if(e.code==='ArrowRight')keys.right=false});addEventListener('blur',()=>{keys.left=keys.right=false});addEventListener('resize',()=>{resize();draw()});reset();resize();draw();
+})();
+</script>
+</body>
+</html>
