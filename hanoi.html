@@ -52,14 +52,14 @@
     margin: 0 0 5px;
     text-align: center;
     color: var(--accent);
-    font-size: 29px;
+    font-size: 36px;
   }
 
   .subtitle {
     margin-bottom: 17px;
     text-align: center;
     color: var(--muted);
-    font-size: 15px;
+    font-size: 20px;
   }
 
   .settings {
@@ -96,7 +96,7 @@
     border: 1px solid var(--border);
     border-radius: 8px;
     color: var(--muted);
-    font-size: 14px;
+    font-size: 24px;
     font-weight: 700;
   }
 
@@ -104,7 +104,7 @@
     display: block;
     margin-top: 2px;
     color: var(--text);
-    font-size: 21px;
+    font-size: 28px;
   }
 
   .records {
@@ -121,11 +121,11 @@
     border: 1px solid var(--border);
     border-radius: 8px;
     color: var(--muted);
-    font-size: 14px;
+    font-size: 24px;
     font-weight: 700;
   }
 
-  .record b { margin-left: 5px; color: var(--accent); font-size: 18px; }
+  .record b { margin-left: 5px; color: var(--accent); font-size: 24px; }
 
   .selection-status {
     min-height: 38px;
@@ -227,7 +227,7 @@
     top: -6px;
     z-index: 5;
     color: var(--muted);
-    font-size: 15px;
+    font-size: 20px;
     font-weight: 800;
   }
 
@@ -266,7 +266,7 @@
     border: 2px solid rgba(0,0,0,.22);
     border-radius: 8px;
     color: white;
-    font-size: 15px;
+    font-size: 20px;
     font-weight: 800;
     text-shadow: 0 1px 2px rgba(0,0,0,.65);
     box-shadow: 0 3px 5px rgba(0,0,0,.24), inset 0 2px rgba(255,255,255,.25);
@@ -284,7 +284,7 @@
     margin-top: 8px;
     text-align: center;
     color: var(--ng);
-    font-size: 14px;
+    font-size: 24px;
     font-weight: 800;
   }
 
@@ -297,7 +297,7 @@
     background: rgba(31,138,99,.10);
     border: 2px solid var(--accent2);
     border-radius: 8px;
-    font-size: 18px;
+    font-size: 24px;
     font-weight: 800;
   }
 
@@ -311,12 +311,12 @@
 
   button {
     flex: 1;
-    padding: 13px 8px;
+    padding: 18px 10px;
     border: none;
     border-radius: 7px;
     background: var(--accent2);
     color: #fff;
-    font: 700 16px var(--font);
+    font: 700 21px var(--font);
     cursor: pointer;
   }
 
@@ -356,10 +356,10 @@
     .rod { width: 25px; height: 205px; }
     .stats { gap: 4px; }
     .stat { padding: 7px 2px; font-size: 12px; }
-    .stat b { font-size: 18px; }
+    .stat b { font-size: 24px; }
     .records { grid-template-columns: 1fr; }
     .peg-state { min-width: 68px; font-size: 11px; }
-    .disk { height: 29px; font-size: 14px; }
+    .disk { height: 29px; font-size: 24px; }
   }
 </style>
 </head>
@@ -423,9 +423,11 @@
     <button type="button" id="clearRecordsButton" class="secondary">記録を消す</button>
   </div>
 
-  <div class="note">
-    1回目のクリックで円ばんを選び、2回目のクリックで移動先を選びます。
-  </div>
+  <div class="note" style="font-size:22px;font-weight:bold;line-height:1.8;">
+① 動かしたい円ばんがある棒をクリックします。<br>
+② 緑色の枠が出た棒をクリックすると移動します。<br>
+③ もう一度同じ棒を押すと選択を取り消せます。
+</div>
 </main>
 
 <script>
