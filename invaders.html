@@ -1,1 +1,575 @@
 
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>インベーダー迎撃ゲーム｜ゲームひろば</title>
+
+<link rel="stylesheet" href="/assets/base.css">
+<script src="/assets/ui.js"></script>
+
+<style>
+/* ------------------------------------------------------------
+   インベーダー迎撃ゲームだけの見た目。
+   色・文字サイズ・ボタンの共通設定は base.css にあります。
+
+   var(--accent, #146c48) のように2つ目に色を書いてあるのは、
+   万一 base.css が読めなかったときの「予備の色」です。
+   base.css が読めていれば、そちらが使われます。
+   ------------------------------------------------------------ */
+
+.console { max-width: 27rem; }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat {
+  padding: 0.35rem 0.2rem;
+  text-align: center;
+  background: var(--card, #fbf9f2);
+  border: 1px solid var(--border, #b9c7c0);
+  border-radius: 0.4rem;
+  color: var(--text-dim, #3d4b46);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.stat b {
+  display: block;
+  margin-top: 0.1rem;
+  color: var(--accent, #146c48);
+  font-size: 1.25rem;
+}
+
+/* ---- 画面 ---- */
+
+.screen-wrap {
+  position: relative;
+  padding: 0.3rem;
+  background: #0c1410;
+  border: 3px solid #33443c;
+  border-radius: 0.4rem;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #0c1410;
+  border-radius: 0.15rem;
+  touch-action: none;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.9rem;
+  text-align: center;
+  background: rgba(12, 20, 16, 0.94);
+  border-radius: 0.15rem;
+}
+
+.overlay.hidden { display: none; }
+
+.overlay-title {
+  margin-bottom: 0.5rem;
+  color: #8df0c0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.overlay-desc {
+  margin-bottom: 0.8rem;
+  color: #cfe0d8;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.overlay-desc b { color: #ffe28a; }
+
+.speed-select {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+
+.speed-select label {
+  color: #cfe0d8;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.speed-select select {
+  min-height: 2.4rem;
+  padding: 0.3rem 0.6rem;
+  border: 2px solid var(--border, #b9c7c0);
+  border-radius: 0.4rem;
+  background: var(--card, #fbf9f2);
+  color: var(--accent, #146c48);
+  font-family: var(--font, "Yu Gothic UI","YuGothic","Hiragino Sans","Noto Sans JP","Meiryo",sans-serif);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ---- 手もとのボタン ---- */
+
+.touch-controls {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.touch-btn {
+  min-height: 3.4rem;
+  padding: 0.6rem 0;
+  border: 2px solid var(--border, #b9c7c0);
+  border-radius: 0.5rem;
+  background: #ffffff;
+  color: var(--text, #1a2622);
+  font-family: var(--font, "Yu Gothic UI","YuGothic","Hiragino Sans","Noto Sans JP","Meiryo",sans-serif);
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.touch-btn.fire {
+  background: var(--accent-2, #1f8a63);
+  border-color: var(--accent-2, #1f8a63);
+  color: #ffffff;
+}
+
+.touch-btn:active {
+  background: #d9ece2;
+  border-color: var(--accent-2, #1f8a63);
+}
+
+.touch-btn.fire:active { background: var(--accent, #146c48); }
+
+/* ---- 画面がせまいとき（このブロックは1つだけ。増やさないでください） ---- */
+
+@media (max-width: 560px) {
+  .back-link { display: block; text-align: center; }
+  .stats     { grid-template-columns: 1fr 1fr; }
+  .stats .stat:last-child { grid-column: 1 / -1; }
+}
+</style>
+</head>
+<body>
+<main class="console">
+  <a class="back-link" href="/">← ゲームひろばへ もどる</a>
+
+  <h1>インベーダー迎撃ゲーム</h1>
+  <p class="subtitle">1画面だけの たたかいです</p>
+
+  <div class="stats">
+    <div class="stat">とくてん<b id="scoreVal">0</b></div>
+    <div class="stat">のこり機<b id="livesVal">3</b></div>
+    <div class="stat">のこりインベーダー<b id="remainVal">28</b></div>
+  </div>
+
+  <div class="screen-wrap">
+    <canvas id="game" width="400" height="440"></canvas>
+    <div class="overlay" id="overlay">
+      <div class="overlay-title" id="overlayTitle">インベーダー迎撃ゲーム</div>
+      <div class="overlay-desc" id="overlayDesc">
+        左右のボタン（または ← → キー）で動かし、<br>
+        「発射」ボタン（またはスペースキー）で撃ちます。<br>
+        <b>1画面ぜんぶ倒せば クリアです。</b>
+      </div>
+      <div class="speed-select">
+        <label for="speedSelect">スピード</label>
+        <select id="speedSelect">
+          <option value="0.7">ゆっくり</option>
+          <option value="1" selected>ふつう</option>
+          <option value="1.5">はやい</option>
+        </select>
+      </div>
+      <button class="btn" id="startBtn">スタート</button>
+    </div>
+  </div>
+
+  <div class="touch-controls">
+    <button class="touch-btn" id="leftBtn">◀ ひだり</button>
+    <button class="touch-btn fire" id="fireBtn">発射</button>
+    <button class="touch-btn" id="rightBtn">みぎ ▶</button>
+  </div>
+
+  <div class="how-to">
+    ① 左右のボタンで、自機を動かします。<br>
+    ② 「発射」で 弾を撃ちます。<br>
+    ③ インベーダーを ぜんぶ倒せば クリア。1画面で おしまいです。
+  </div>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const overlay      = document.getElementById("overlay");
+  const overlayTitle = document.getElementById("overlayTitle");
+  const overlayDesc  = document.getElementById("overlayDesc");
+  const startBtn     = document.getElementById("startBtn");
+  const speedSelect  = document.getElementById("speedSelect");
+
+  const scoreVal  = document.getElementById("scoreVal");
+  const livesVal  = document.getElementById("livesVal");
+  const remainVal = document.getElementById("remainVal");
+
+  /* ---- ならび ---- */
+  const ROWS = 4, COLS = 7;
+  const INV_W = 28, INV_H = 18, GAP_X = 12, GAP_Y = 14;
+  const TOTAL = ROWS * COLS;
+
+  /* ---- 速さ（1秒あたりの動く量）----------------------------
+     UFOディフェンスよりは速く、でも急かされない速さにしています。
+       UFOディフェンス … 横に 26px/秒（画面幅800）＝ 約3%
+       このゲーム      … 横に 40px/秒（画面幅400）＝ 約10%
+     数字を大きくすると速く、小さくするとゆっくりになります。
+     -------------------------------------------------------- */
+  const INV_SPEED_BASE   = 40;   // インベーダーの横移動
+  const INV_DROP         = 14;   // はしに着いたとき下がる量
+  const PLAYER_SPEED     = 260;  // 自機
+  const P_BULLET_SPEED   = 430;  // こちらの弾
+  const E_BULLET_SPEED   = 165;  // 相手の弾
+  const FIRE_COOLDOWN    = 0.25; // 連射のあいだ
+  const E_FIRE_INTERVAL  = 2.0;  // 相手が撃つ間かく
+
+  let score = 0, lives = 3;
+  let running = false, animId = null, lastTime = 0;
+  let speedMul = 1;
+
+  const player = { w: 34, h: 16, x: W / 2 - 17, y: H - 34 };
+  let moveLeft = false, moveRight = false;
+
+  let playerBullets = [], enemyBullets = [], invaders = [];
+  let invDir = 1, invSpeed = INV_SPEED_BASE;
+  let fireCool = 0, enemyTimer = 0, invincible = 0;
+
+  /* 音を鳴らしてよいか。ui.js の設定を見ます */
+  function soundOn() { return !window.GH || window.GH.soundEnabled(); }
+
+  function setupInvaders() {
+    invaders = [];
+    const totalWidth = COLS * (INV_W + GAP_X) - GAP_X;
+    const startX = (W - totalWidth) / 2;
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        invaders.push({
+          x: startX + c * (INV_W + GAP_X),
+          y: 40 + r * (INV_H + GAP_Y),
+          alive: true,
+          row: r
+        });
+      }
+    }
+    invDir = 1;
+    invSpeed = INV_SPEED_BASE * speedMul;
+  }
+
+  function resetGame() {
+    score = 0;
+    lives = 3;
+    player.x = W / 2 - player.w / 2;
+    playerBullets = [];
+    enemyBullets = [];
+    fireCool = 0;
+    enemyTimer = 0;
+    invincible = 0;
+    setupInvaders();
+    updateStats();
+  }
+
+  function aliveCount() {
+    let n = 0;
+    for (const inv of invaders) if (inv.alive) n++;
+    return n;
+  }
+
+  function updateStats() {
+    scoreVal.textContent = score;
+    livesVal.textContent = lives;
+    remainVal.textContent = aliveCount();
+  }
+
+  /* ---- 描く ---- */
+
+  function rowColor(row) {
+    return ["#ff6b6b", "#ffd166", "#7ee8b8", "#8fb8ff"][row % 4];
+  }
+
+  function drawPlayer() {
+    if (invincible > 0 && Math.floor(invincible * 10) % 2 === 0) return;
+    ctx.fillStyle = "#7ee8b8";
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+    ctx.fillRect(player.x + player.w / 2 - 3, player.y - 8, 6, 8);
+  }
+
+  function drawInvaders() {
+    for (const inv of invaders) {
+      if (!inv.alive) continue;
+      ctx.fillStyle = rowColor(inv.row);
+      ctx.fillRect(inv.x, inv.y, INV_W, INV_H);
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.fillRect(inv.x + 5, inv.y + 5, 4, 4);
+      ctx.fillRect(inv.x + INV_W - 9, inv.y + 5, 4, 4);
+    }
+  }
+
+  function drawBullets() {
+    ctx.fillStyle = "#e8ffe8";
+    for (const b of playerBullets) ctx.fillRect(b.x - 2, b.y, 4, 10);
+    ctx.fillStyle = "#ff9f9f";
+    for (const b of enemyBullets) ctx.fillRect(b.x - 2, b.y, 4, 10);
+  }
+
+  /* ---- 動かす（dt = 前の絵からの秒数。画面が速いパソコンでも
+          同じ速さになります）---- */
+
+  function update(dt) {
+    if (moveLeft)  player.x -= PLAYER_SPEED * dt;
+    if (moveRight) player.x += PLAYER_SPEED * dt;
+    player.x = Math.max(4, Math.min(W - player.w - 4, player.x));
+
+    fireCool   = Math.max(0, fireCool - dt);
+    invincible = Math.max(0, invincible - dt);
+
+    for (const b of playerBullets) b.y -= P_BULLET_SPEED * dt;
+    playerBullets = playerBullets.filter(b => b.y > -12);
+
+    for (const b of enemyBullets) b.y += E_BULLET_SPEED * dt;
+    enemyBullets = enemyBullets.filter(b => b.y < H + 12);
+
+    /* インベーダーの横移動 */
+    let hitEdge = false, lowest = 0;
+    for (const inv of invaders) {
+      if (!inv.alive) continue;
+      inv.x += invSpeed * invDir * dt;
+      if (inv.x <= 4 || inv.x + INV_W >= W - 4) hitEdge = true;
+    }
+    if (hitEdge) {
+      invDir *= -1;
+      for (const inv of invaders) {
+        if (!inv.alive) continue;
+        inv.x = Math.max(4, Math.min(W - INV_W - 4, inv.x));
+        inv.y += INV_DROP;
+      }
+    }
+    for (const inv of invaders) {
+      if (inv.alive) lowest = Math.max(lowest, inv.y + INV_H);
+    }
+
+    /* 相手の発射 */
+    enemyTimer += dt;
+    if (enemyTimer >= E_FIRE_INTERVAL / speedMul) {
+      enemyTimer = 0;
+      const list = invaders.filter(i => i.alive);
+      if (list.length) {
+        const s = list[Math.floor(Math.random() * list.length)];
+        enemyBullets.push({ x: s.x + INV_W / 2, y: s.y + INV_H });
+      }
+    }
+
+    /* 当たり判定 */
+    for (const b of playerBullets) {
+      for (const inv of invaders) {
+        if (!inv.alive) continue;
+        if (b.x > inv.x && b.x < inv.x + INV_W && b.y > inv.y && b.y < inv.y + INV_H) {
+          inv.alive = false;
+          b.y = -200;
+          score += 10;
+          updateStats();
+          playHitSound();
+          break;
+        }
+      }
+    }
+    playerBullets = playerBullets.filter(b => b.y > -12);
+
+    if (invincible <= 0) {
+      for (const b of enemyBullets) {
+        if (b.x > player.x && b.x < player.x + player.w &&
+            b.y > player.y && b.y < player.y + player.h) {
+          b.y = H + 200;
+          loseLife();
+          break;
+        }
+      }
+    }
+
+    /* 自機がやられて終わっていたら、ここで打ち切ります */
+    if (!running) return;
+
+    /* 1画面ぶん ぜんぶ倒したら クリア。つづきの面はありません */
+    if (aliveCount() === 0) { endGame(true); return; }
+
+    /* 下まで来られたら おしまい */
+    if (lowest >= player.y) { endGame(false); return; }
+  }
+
+  function loseLife() {
+    lives -= 1;
+    enemyBullets = [];
+    invincible = 1.5;
+    updateStats();
+    playDamageSound();
+    if (lives <= 0) { endGame(false); return; }
+    player.x = W / 2 - player.w / 2;
+  }
+
+  function endGame(won) {
+    running = false;
+    if (animId) cancelAnimationFrame(animId);
+
+    if (won) {
+      const bonus = lives * 50;
+      score += bonus;
+      updateStats();
+      overlayTitle.textContent = "クリア！ お見事です";
+      overlayDesc.innerHTML =
+        "インベーダーを ぜんぶ 倒しました。<br>" +
+        "とくてん <b>" + score + "</b>　（のこり機のボーナス " + bonus + "）";
+      playClearSound();
+    } else {
+      overlayTitle.textContent = "おしまいです";
+      overlayDesc.innerHTML =
+        "とくてん <b>" + score + "</b><br>" +
+        "もう一度 やってみましょう。";
+      playGameOverSound();
+    }
+    startBtn.textContent = "もう一度 あそぶ";
+    overlay.classList.remove("hidden");
+  }
+
+  /* ---- 音 ---- */
+
+  let audioCtx = null;
+  function getAudioCtx() {
+    if (!audioCtx) {
+      const A = window.AudioContext || window.webkitAudioContext;
+      if (A) audioCtx = new A();
+    }
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+
+  function beep(freq, dur, type, vol, delay) {
+    if (!soundOn()) return;
+    const ctxA = getAudioCtx();
+    if (!ctxA) return;
+    try {
+      const t = ctxA.currentTime + (delay || 0);
+      const osc = ctxA.createOscillator();
+      const gain = ctxA.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(vol, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      osc.connect(gain);
+      gain.connect(ctxA.destination);
+      osc.start(t);
+      osc.stop(t + dur + 0.02);
+    } catch (e) {}
+  }
+
+  function playShootSound()    { beep(700, 0.08, "square", 0.09, 0); }
+  function playHitSound()      { beep(240, 0.11, "sawtooth", 0.11, 0); }
+  function playDamageSound()   { beep(95, 0.26, "sawtooth", 0.12, 0); }
+  function playClearSound()    { [523, 659, 784, 1047].forEach((f, i) => beep(f, 0.20, "square", 0.10, i * 0.13)); }
+  function playGameOverSound() { [392, 300, 220, 165].forEach((f, i) => beep(f, 0.24, "sawtooth", 0.10, i * 0.16)); }
+
+  /* ---- 操作 ---- */
+
+  function fire() {
+    if (!running || fireCool > 0) return;
+    if (playerBullets.length >= 3) return;
+    playerBullets.push({ x: player.x + player.w / 2, y: player.y - 4 });
+    fireCool = FIRE_COOLDOWN;
+    playShootSound();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    drawInvaders();
+    drawBullets();
+    drawPlayer();
+  }
+
+  function loop(t) {
+    if (!running) return;
+    const dt = Math.min(0.035, (t - lastTime) / 1000 || 0);
+    lastTime = t;
+    update(dt);
+    if (!running) { draw(); return; }
+    draw();
+    animId = requestAnimationFrame(loop);
+  }
+
+  function startGame() {
+    speedMul = parseFloat(speedSelect.value) || 1;
+    resetGame();
+    overlay.classList.add("hidden");
+    running = true;
+    lastTime = performance.now();
+    getAudioCtx();
+    animId = requestAnimationFrame(loop);
+  }
+
+  startBtn.addEventListener("click", startGame);
+
+  document.addEventListener("keydown", e => {
+    if (e.code === "ArrowLeft")  { e.preventDefault(); moveLeft = true; }
+    if (e.code === "ArrowRight") { e.preventDefault(); moveRight = true; }
+    if (e.code === "Space")      { e.preventDefault(); fire(); }
+    if (e.code === "Enter" && !running) startGame();
+  });
+
+  document.addEventListener("keyup", e => {
+    if (e.code === "ArrowLeft")  moveLeft = false;
+    if (e.code === "ArrowRight") moveRight = false;
+  });
+
+  window.addEventListener("blur", () => { moveLeft = moveRight = false; });
+
+  function hold(el, on) {
+    el.addEventListener("pointerdown", e => { e.preventDefault(); on(true); });
+    el.addEventListener("pointerup",     e => { e.preventDefault(); on(false); });
+    el.addEventListener("pointercancel", () => on(false));
+    el.addEventListener("pointerleave",  () => on(false));
+  }
+
+  hold(document.getElementById("leftBtn"),  v => moveLeft = v);
+  hold(document.getElementById("rightBtn"), v => moveRight = v);
+  document.getElementById("fireBtn")
+    .addEventListener("pointerdown", e => { e.preventDefault(); fire(); });
+
+  /* さいしょの絵 */
+  setupInvaders();
+  updateStats();
+  draw();
+})();
+</script>
+</body>
+</html>
