@@ -4,150 +4,185 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ゲームひろば</title>
+<meta name="description" content="むかしなつかしいゲームとパズルで、あたまの体操。登録もお金もいりません。">
+
+<link rel="stylesheet" href="/assets/base.css">
+<script src="/assets/ui.js"></script>
+
 <style>
-  :root {
-    --bg: #e8ede6;
-    --panel: #f7f4ec;
-    --tile: #fbf9f2;
-    --border: #c7d3cd;
-    --accent: #146c48;
-    --accent-dim: #1f8a63;
-    --text: #1c2a26;
-    --text-dim: #4b5b56;
-    --mono: "JetBrains Mono", "Courier New", monospace;
-  }
+/* ------------------------------------------------------------
+   トップページだけの見た目。
+   色・文字サイズ・ボタンの共通設定は base.css にあります。
+   ------------------------------------------------------------ */
 
-  * { box-sizing: border-box; }
+.lead {
+  margin: 0 0 1rem;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 1rem;
+  line-height: 1.7;
+}
 
-  body {
-    margin: 0;
-    min-height: 100vh;
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--mono);
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 32px 16px;
-  }
+.game-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
 
-  .console {
-    width: 100%;
-    max-width: 520px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 28px;
-    box-shadow: 0 0 0 1px #000, 0 20px 60px rgba(0,0,0,0.15);
-  }
+.game-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.8rem 0.9rem;
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 0.6rem;
+}
 
-  h1 {
-    font-size: 26px;
-    letter-spacing: 0.04em;
-    margin: 0 0 6px 0;
-    color: var(--accent);
-    font-weight: 700;
-    text-align: center;
-  }
+.game-body { flex: 1 1 14rem; min-width: 0; }
 
-  .subtitle {
-    font-size: 15px;
-    color: var(--text-dim);
-    margin-bottom: 28px;
-    text-align: center;
-  }
+.game-title {
+  color: var(--accent);
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
 
-  .game-list {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
+.game-desc {
+  margin-top: 0.15rem;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
 
-  .game-card {
-    display: block;
-    background: var(--tile);
-    border: 2px solid var(--border);
-    border-radius: 6px;
-    padding: 18px 20px;
-    text-decoration: none;
-    color: var(--text);
-    transition: all 0.15s ease;
-  }
+.play-btn {
+  flex: 0 0 auto;
+  min-width: 7rem;
+  min-height: 2.9rem;
+  padding: 0.6rem 1.1rem;
+  border: 2px solid var(--accent-2);
+  border-radius: 0.5rem;
+  background: var(--accent-2);
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+}
 
-  .game-card:hover {
-    border-color: var(--accent-dim);
-    background: rgba(31, 138, 99, 0.06);
-  }
+.play-btn:hover,
+.play-btn:focus-visible {
+  background: var(--accent);
+  border-color: var(--accent);
+}
 
-  .game-title {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--accent);
-    margin-bottom: 4px;
-  }
+.older {
+  margin-top: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--card);
+}
 
-  .game-desc {
-    font-size: 14px;
-    color: var(--text-dim);
-    line-height: 1.6;
-  }
+.older > summary {
+  padding: 0.6rem 0.9rem;
+  color: var(--text-dim);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
 
-  .game-card.placeholder {
-    opacity: 0.5;
-    cursor: default;
-    pointer-events: none;
-    border-style: dashed;
-  }
+.older > div { padding: 0 0.9rem 0.9rem; }
 
-  .footer-note {
-    margin-top: 26px;
-    font-size: 12px;
-    color: var(--text-dim);
-    text-align: center;
-    line-height: 1.7;
-  }
+.older .game-title { font-size: 1.05rem; }
+
+.footer-note {
+  margin-top: 1.2rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+/* ---- 画面がせまいとき（このブロックは1つだけ。増やさないでください） ---- */
+
+@media (max-width: 560px) {
+  .game-card { flex-direction: column; align-items: stretch; }
+  .play-btn  { width: 100%; }
+}
 </style>
 </head>
 <body>
+<main class="console">
 
-<div class="console">
   <h1>ゲームひろば</h1>
-  <div class="subtitle">自作の懐かしい簡単ゲームです</div>
+  <p class="subtitle">むかしなつかしいゲームとパズル</p>
+
+  <p class="lead">
+    登録もお金もいりません。<br>
+    ボタンを押すだけで、すぐに あそべます。
+  </p>
 
   <div class="game-list">
-    <a class="game-card" href="slide-puzzle/">
-      <div class="game-title">🧩 スライドパズル</div>
-      <div class="game-desc">音や演出、ベスト記録の保存つき。数字を並べ替えて完成させましょう。</div>
-    </a>
 
-    <a class="game-card" href="hanoi.html">
-      <div class="game-title">🗼 ハノイの塔</div>
-      <div class="game-desc">すべての円ばんを右のはしの棒に移しかえるパズルです。円ばんの数は3〜7枚から選べます。</div>
-    </a>
-
-    <a class="game-card" href="ufo-attack.html">
-      <div class="game-title">🛸 UFOディフェンス（新作）</div>
-      <div class="game-desc">ゆっくり遊べる一画面のシューティングゲームです。UFOをすべて倒してクリアをめざしましょう。</div>
-    </a>
-
-    <a class="game-card" href="invaders.html">
-      <div class="game-title">👾 インベーダー迎撃ゲーム（旧作）</div>
-      <div class="game-desc">以前に作ったシューティングゲームです。左右キーで自機を動かし、インベーダーをうちおとします。</div>
-    </a>
-
-    <a class="game-card" href="slide-puzzle.html">
-      <div class="game-title">スライドパズル（シンプル版・旧作）</div>
-      <div class="game-desc">9パズルと15パズルを切り替えて遊べる、以前のシンプルなバージョンです。</div>
-    </a>
-
-    <div class="game-card placeholder">
-      <div class="game-title">次のゲーム、準備中</div>
-      <div class="game-desc">これから新しいゲームを追加していきます。</div>
+    <div class="game-card">
+      <div class="game-body">
+        <div class="game-title"><span aria-hidden="true">🧩</span> スライドパズル</div>
+        <div class="game-desc">数字を順番に ならべかえて、完成させましょう。9まいと15まいが えらべます。</div>
+      </div>
+      <a class="play-btn" href="/slide-puzzle/">あそぶ</a>
     </div>
+
+    <div class="game-card">
+      <div class="game-body">
+        <div class="game-title"><span aria-hidden="true">🗼</span> ハノイの塔</div>
+        <div class="game-desc">すべての円ばんを、右のはしの棒へ移しかえるパズルです。円ばんは3〜7まいから えらべます。</div>
+      </div>
+      <a class="play-btn" href="/hanoi.html">あそぶ</a>
+    </div>
+
+    <div class="game-card">
+      <div class="game-body">
+        <div class="game-title"><span aria-hidden="true">🛸</span> UFOディフェンス</div>
+        <div class="game-desc">ゆっくり あそべる、一画面の うちおとしゲームです。UFOを ぜんぶ たおしましょう。</div>
+      </div>
+      <a class="play-btn" href="/ufo-attack.html">あそぶ</a>
+    </div>
+
   </div>
 
-  <div class="footer-note">ゲームを増やしたら、ここにカードを追加していきます</div>
-</div>
+  <details class="older">
+    <summary>以前に作ったゲームも あります</summary>
+    <div>
+      <div class="game-list">
 
+        <div class="game-card">
+          <div class="game-body">
+            <div class="game-title"><span aria-hidden="true">👾</span> インベーダー迎撃ゲーム</div>
+            <div class="game-desc">左右のキーで自機を動かして、うちおとします。</div>
+          </div>
+          <a class="play-btn" href="/invaders.html">あそぶ</a>
+        </div>
+
+        <div class="game-card">
+          <div class="game-body">
+            <div class="game-title">スライドパズル（シンプル版）</div>
+            <div class="game-desc">以前の、かんたんな つくりのものです。</div>
+          </div>
+          <a class="play-btn" href="/slide-puzzle.html">あそぶ</a>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <p class="footer-note">
+    時間の せいげんは ありません。まちがえても、へっちゃらです。<br>
+    これから、新しいゲームを ふやしていきます。
+  </p>
+
+</main>
 </body>
 </html>
