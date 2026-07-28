@@ -1,1 +1,678 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ハノイの塔｜ゲームひろば</title>
 
+<!-- 共通デザインと共通の仕組み。この2行だけで文字サイズ切替と音の設定が付きます -->
+<link rel="stylesheet" href="/assets/base.css">
+<script src="/assets/ui.js"></script>
+
+<style>
+/* ------------------------------------------------------------
+   ハノイの塔だけの見た目。
+   色・文字サイズ・ボタンの共通設定は base.css にあります。
+   ここには「このゲーム特有のもの」だけを書きます。
+   ------------------------------------------------------------ */
+
+.settings {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.settings label { font-weight: 700; color: var(--text-dim); }
+
+.settings select {
+  min-height: 2.6rem;
+  padding: 0.3rem 0.7rem;
+  border: 2px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--card);
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.stat {
+  padding: 0.4rem 0.3rem;
+  text-align: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.stat b {
+  display: block;
+  margin-top: 0.1rem;
+  color: var(--text);
+  font-size: 1.3rem;
+}
+
+.record-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.7rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+.record-line b { color: var(--accent); font-size: 1.1rem; }
+
+.selection-status {
+  min-height: 2.8rem;
+  margin: 0.5rem 0 0.4rem;
+  padding: 0.4rem 0.7rem;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--card);
+  color: var(--text-dim);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.selection-status.active {
+  color: var(--warn);
+  border-color: #d8a15e;
+  background: var(--warn-bg);
+}
+
+/* ---- 盤面 ---- */
+
+.board {
+  height: 16rem;
+  padding: 0.9rem 0.4rem 0;
+  display: flex;
+  align-items: flex-end;
+  background: #ddd6c4;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  user-select: none;
+}
+
+.peg {
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+  padding-bottom: 1rem;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  border: 3px solid transparent;
+  border-radius: 0.5rem 0.5rem 0 0;
+  transition: background .15s, border-color .15s;
+}
+
+.peg:hover { background: rgba(255,255,255,.20); }
+.peg.selected     { background: rgba(210,122,36,.14); border-color: var(--warn); }
+.peg.can-move     { background: rgba(29,122,76,.16);  border-color: var(--ok); }
+.peg.cannot-move  { background: rgba(168,50,38,.12);  border-color: var(--ng); }
+
+.peg-state {
+  position: absolute;
+  top: 1.1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  min-width: 5rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 800;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.peg.can-move    .peg-state { opacity: 1; color: #fff; background: var(--ok); }
+.peg.cannot-move .peg-state { opacity: 1; color: #fff; background: var(--ng); }
+.peg.selected    .peg-state { opacity: 1; color: #fff; background: var(--warn); }
+
+.peg-label {
+  position: absolute;
+  top: -0.35rem;
+  z-index: 5;
+  color: var(--text-dim);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.rod {
+  position: absolute;
+  bottom: 1rem;
+  z-index: 1;
+  width: 1.4rem;
+  height: 12.5rem;
+  background: #8d6e63;
+  border: 2px solid #624b42;
+  border-radius: 0.6rem 0.6rem 0.1rem 0.1rem;
+  pointer-events: none;
+}
+
+.base {
+  position: absolute;
+  bottom: 0;
+  z-index: 1;
+  width: 92%;
+  height: 1rem;
+  background: #8d6e63;
+  border: 2px solid #624b42;
+  border-radius: 0.3rem;
+  pointer-events: none;
+}
+
+.disk {
+  height: 1.6rem;
+  margin-bottom: 0.12rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(0,0,0,.28);
+  border-radius: 0.4rem;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0,0,0,.7);
+  pointer-events: none;
+  transition: transform .12s;
+}
+
+.peg.selected .disk.top-disk {
+  transform: translateY(-0.45rem);
+  outline: 3px solid rgba(210,122,36,.55);
+}
+
+/* ---- 知らせ ---- */
+
+.message {
+  min-height: 1.5rem;
+  margin-top: 0.4rem;
+  text-align: center;
+  color: var(--ng);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.win {
+  display: none;
+  margin-top: 0.5rem;
+  padding: 0.7rem;
+  text-align: center;
+  color: var(--accent);
+  background: rgba(31,138,99,.10);
+  border: 2px solid var(--accent-2);
+  border-radius: 0.5rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.win.show { display: block; }
+
+.controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.controls .btn { flex: 1; }
+
+/* ---- 紙ふぶき ---- */
+
+.confetti {
+  position: fixed;
+  top: -25px;
+  z-index: 9999;
+  pointer-events: none;
+  animation: fall linear forwards;
+}
+
+@keyframes fall {
+  from { transform: translate3d(0,-20px,0) rotate(0deg); }
+  to   { transform: translate3d(var(--drift),110vh,0) rotate(900deg); }
+}
+
+/* ---- 画面がせまいとき（このブロックは1つだけ。増やさないでください） ---- */
+
+@media (max-width: 560px) {
+  .back-link  { display: block; text-align: center; }
+  .stats      { grid-template-columns: 1fr 1fr; }
+  .stats .stat:last-child { grid-column: 1 / -1; }
+  .controls   { flex-direction: column; }
+  .peg-state  { min-width: 4rem; font-size: 0.75rem; }
+  .rod        { width: 1.2rem; }
+}
+</style>
+</head>
+<body>
+<main class="game">
+  <a class="back-link" href="/">← ゲームひろばへ もどる</a>
+
+  <h1>ハノイの塔</h1>
+  <p class="subtitle">すべての円ばんを、右のはしの棒に移しかえましょう</p>
+
+  <div class="settings">
+    <label for="diskCount">円ばんの数</label>
+    <select id="diskCount">
+      <option value="3">3枚</option>
+      <option value="4" selected>4枚</option>
+      <option value="5">5枚</option>
+      <option value="6">6枚</option>
+      <option value="7">7枚</option>
+    </select>
+  </div>
+
+  <section class="stats" aria-label="いまの成績">
+    <div class="stat">手数<b id="moveCount">0</b></div>
+    <div class="stat">かかった時間<b id="elapsedTime">00:00</b></div>
+    <div class="stat">最小の手数<b id="minimumMoves">15</b></div>
+  </section>
+
+  <div id="selectionStatus" class="selection-status" aria-live="polite">
+    動かしたい円ばんがある棒を押してください
+  </div>
+
+  <div class="board" id="board">
+    <div class="peg" data-peg="0" id="peg0">
+      <div class="peg-label">A</div>
+      <div class="peg-state">選択中</div>
+      <div class="rod"></div>
+      <div class="base"></div>
+    </div>
+    <div class="peg" data-peg="1" id="peg1">
+      <div class="peg-label">B</div>
+      <div class="peg-state">置けます</div>
+      <div class="rod"></div>
+      <div class="base"></div>
+    </div>
+    <div class="peg" data-peg="2" id="peg2">
+      <div class="peg-label">C</div>
+      <div class="peg-state">置けます</div>
+      <div class="rod"></div>
+      <div class="base"></div>
+    </div>
+  </div>
+
+  <div class="message" id="message" aria-live="polite"></div>
+  <div class="win" id="winBanner"></div>
+
+  <div class="controls">
+    <button type="button" class="btn" id="restartButton">はじめから やりなおす</button>
+  </div>
+
+  <details class="records-box">
+    <summary>これまでの記録を見る</summary>
+    <div>
+      <div class="record-line"><span>手数の記録 <b id="bestMoves">―</b></span><span>時間の記録 <b id="bestTime">―</b></span></div>
+      <div class="controls">
+        <button type="button" class="btn secondary" id="clearRecordsButton">記録を消す</button>
+      </div>
+    </div>
+  </details>
+
+  <div class="how-to">
+    ① 動かしたい円ばんがある棒を押します。<br>
+    ② 緑色のわくが出た棒を押すと、移ります。<br>
+    ③ 同じ棒をもう一度押すと、選びなおせます。
+  </div>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  const COLORS = ["#c62828","#ef6c00","#c99700","#2e7d32","#00796b","#1565c0","#5e35b1"];
+
+  const state = {
+    diskCount: 4,
+    pegs: [[], [], []],
+    selectedPeg: null,
+    moves: 0,
+    solved: false,
+    started: false,
+    startTimestamp: 0,
+    elapsedSeconds: 0,
+    timerId: null,
+    audioContext: null
+  };
+
+  const el = {
+    diskCount: document.getElementById("diskCount"),
+    moveCount: document.getElementById("moveCount"),
+    elapsedTime: document.getElementById("elapsedTime"),
+    minimumMoves: document.getElementById("minimumMoves"),
+    bestMoves: document.getElementById("bestMoves"),
+    bestTime: document.getElementById("bestTime"),
+    selectionStatus: document.getElementById("selectionStatus"),
+    message: document.getElementById("message"),
+    winBanner: document.getElementById("winBanner"),
+    restartButton: document.getElementById("restartButton"),
+    clearRecordsButton: document.getElementById("clearRecordsButton"),
+    pegs: [...document.querySelectorAll(".peg")]
+  };
+
+  /* 音を鳴らしてよいか。ui.js の設定を見ます */
+  function soundOn() {
+    return !window.GH || window.GH.soundEnabled();
+  }
+
+  function store(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) {}
+  }
+
+  function fetchStored(key) {
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  }
+
+  function topDisk(pegIndex) {
+    const peg = state.pegs[pegIndex];
+    return peg.length ? peg[peg.length - 1] : null;
+  }
+
+  function minimumMoves() {
+    return Math.pow(2, state.diskCount) - 1;
+  }
+
+  function recordKey(kind) {
+    return `hanoi_${kind}_${state.diskCount}`;
+  }
+
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  }
+
+  function loadRecords() {
+    const bestMoves = fetchStored(recordKey("bestMoves"));
+    const bestTime = fetchStored(recordKey("bestTime"));
+    el.bestMoves.textContent = bestMoves ? `${bestMoves}手` : "―";
+    el.bestTime.textContent = bestTime ? formatTime(Number(bestTime)) : "―";
+  }
+
+  function saveRecords() {
+    const oldMoves = Number(fetchStored(recordKey("bestMoves"))) || Infinity;
+    const oldTime = Number(fetchStored(recordKey("bestTime"))) || Infinity;
+    if (state.moves < oldMoves) store(recordKey("bestMoves"), String(state.moves));
+    if (state.elapsedSeconds < oldTime) store(recordKey("bestTime"), String(state.elapsedSeconds));
+    loadRecords();
+  }
+
+  function clearTimer() {
+    if (state.timerId !== null) {
+      clearInterval(state.timerId);
+      state.timerId = null;
+    }
+  }
+
+  function updateElapsed() {
+    if (!state.started) return;
+    state.elapsedSeconds = Math.floor((Date.now() - state.startTimestamp) / 1000);
+    el.elapsedTime.textContent = formatTime(state.elapsedSeconds);
+  }
+
+  function startTimer() {
+    if (state.started || state.solved) return;
+    state.started = true;
+    state.startTimestamp = Date.now();
+    state.timerId = window.setInterval(updateElapsed, 250);
+  }
+
+  function stopTimer() {
+    updateElapsed();
+    clearTimer();
+  }
+
+  function canMove(fromIndex, toIndex) {
+    const moving = topDisk(fromIndex);
+    const target = topDisk(toIndex);
+    return moving !== null && (target === null || moving < target);
+  }
+
+  function resetGame() {
+    clearTimer();
+    state.pegs = [[], [], []];
+    for (let size = state.diskCount; size >= 1; size--) state.pegs[0].push(size);
+    state.selectedPeg = null;
+    state.moves = 0;
+    state.solved = false;
+    state.started = false;
+    state.startTimestamp = 0;
+    state.elapsedSeconds = 0;
+
+    el.moveCount.textContent = "0";
+    el.elapsedTime.textContent = "00:00";
+    el.minimumMoves.textContent = String(minimumMoves());
+    el.message.textContent = "";
+    el.winBanner.classList.remove("show");
+    el.selectionStatus.classList.remove("active");
+    el.selectionStatus.textContent = "動かしたい円ばんがある棒を押してください";
+
+    loadRecords();
+    render();
+  }
+
+  function render() {
+    el.pegs.forEach((pegElement, pegIndex) => {
+      pegElement.querySelectorAll(".disk").forEach(node => node.remove());
+      pegElement.classList.remove("selected","can-move","cannot-move");
+
+      state.pegs[pegIndex].forEach((diskSize, index, array) => {
+        const disk = document.createElement("div");
+        disk.className = "disk";
+        if (index === array.length - 1) disk.classList.add("top-disk");
+        disk.style.width = `${28 + (diskSize / state.diskCount) * 66}%`;
+        disk.style.background = COLORS[(diskSize - 1) % COLORS.length];
+        disk.textContent = String(diskSize);
+        pegElement.appendChild(disk);
+      });
+
+      const badge = pegElement.querySelector(".peg-state");
+      if (state.selectedPeg === null) {
+        badge.textContent = "";
+      } else if (pegIndex === state.selectedPeg) {
+        pegElement.classList.add("selected");
+        badge.textContent = "選択中";
+      } else if (canMove(state.selectedPeg, pegIndex)) {
+        pegElement.classList.add("can-move");
+        badge.textContent = "置けます";
+      } else {
+        pegElement.classList.add("cannot-move");
+        badge.textContent = "置けません";
+      }
+    });
+  }
+
+  function selectPeg(pegIndex) {
+    const disk = topDisk(pegIndex);
+    if (disk === null) {
+      el.message.textContent = "この棒には、動かせる円ばんがありません。";
+      return;
+    }
+    state.selectedPeg = pegIndex;
+    el.message.textContent = "";
+    el.selectionStatus.classList.add("active");
+    el.selectionStatus.textContent = `円ばん ${disk} を選んでいます。緑色の棒へ移せます。`;
+    render();
+  }
+
+  function cancelSelection() {
+    state.selectedPeg = null;
+    el.message.textContent = "";
+    el.selectionStatus.classList.remove("active");
+    el.selectionStatus.textContent = "選ぶのをやめました。動かしたい円ばんを選んでください";
+    render();
+  }
+
+  function moveSelectedDisk(toIndex) {
+    const fromIndex = state.selectedPeg;
+    const moving = topDisk(fromIndex);
+    const target = topDisk(toIndex);
+
+    if (!canMove(fromIndex, toIndex)) {
+      const targetText = target === null ? "空の棒" : `円ばん ${target}`;
+      el.message.textContent = `円ばん ${moving} は ${targetText} の上には置けません。もういちど どうぞ。`;
+      state.selectedPeg = null;
+      el.selectionStatus.classList.remove("active");
+      el.selectionStatus.textContent = "もういちど、動かしたい円ばんを選んでください";
+      render();
+      return;
+    }
+
+    startTimer();
+    const removed = state.pegs[fromIndex].pop();
+
+    if (removed !== moving) {
+      if (removed !== undefined) state.pegs[fromIndex].push(removed);
+      state.selectedPeg = null;
+      el.message.textContent = "もういちど、やりなおしてください。";
+      render();
+      return;
+    }
+
+    state.pegs[toIndex].push(moving);
+    state.moves += 1;
+    state.selectedPeg = null;
+    el.moveCount.textContent = String(state.moves);
+    el.message.textContent = "";
+    el.selectionStatus.classList.remove("active");
+    el.selectionStatus.textContent = "次に動かしたい円ばんがある棒を押してください";
+    render();
+    checkWin();
+  }
+
+  function handlePegClick(pegIndex) {
+    if (state.solved) return;
+
+    if (state.selectedPeg === null) {
+      selectPeg(pegIndex);
+      return;
+    }
+
+    if (pegIndex === state.selectedPeg) {
+      cancelSelection();
+      return;
+    }
+
+    moveSelectedDisk(pegIndex);
+  }
+
+  function checkWin() {
+    if (state.pegs[2].length !== state.diskCount) return;
+    state.solved = true;
+    stopTimer();
+    saveRecords();
+
+    const perfect = state.moves === minimumMoves();
+    el.winBanner.textContent = perfect
+      ? `最小の手数で完成！　${state.moves}手・${formatTime(state.elapsedSeconds)}`
+      : `完成！　${state.moves}手・${formatTime(state.elapsedSeconds)}`;
+    el.winBanner.classList.add("show");
+    el.selectionStatus.textContent = "お見事です。完成しました！";
+    playFanfare();
+    launchConfetti();
+  }
+
+  function clearRecords() {
+    if (!window.confirm(`${state.diskCount}枚の記録を消しますか？`)) return;
+    try {
+      localStorage.removeItem(recordKey("bestMoves"));
+      localStorage.removeItem(recordKey("bestTime"));
+    } catch (e) {}
+    loadRecords();
+  }
+
+  function audioCtx() {
+    if (!state.audioContext) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) state.audioContext = new AudioContextClass();
+    }
+    return state.audioContext;
+  }
+
+  function tone(ctx, frequency, start, duration, volume) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(frequency, start);
+    gain.gain.setValueAtTime(0.001, start);
+    gain.gain.exponentialRampToValueAtTime(volume, start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + duration + 0.04);
+  }
+
+  function playFanfare() {
+    if (!soundOn()) return;
+    const ctx = audioCtx();
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
+
+    const start = ctx.currentTime + 0.04;
+    [
+      [523.25,0.00,0.20,0.13],
+      [659.25,0.20,0.20,0.13],
+      [783.99,0.40,0.24,0.14],
+      [1046.50,0.67,0.60,0.18],
+      [783.99,0.72,0.46,0.12],
+      [659.25,0.77,0.42,0.10]
+    ].forEach(([f,o,d,v]) => tone(ctx,f,start+o,d,v));
+  }
+
+  function launchConfetti() {
+    for (let i = 0; i < 60; i++) {
+      const piece = document.createElement("div");
+      piece.className = "confetti";
+      piece.style.left = `${Math.random() * 100}vw`;
+      piece.style.width = `${7 + Math.random() * 8}px`;
+      piece.style.height = `${10 + Math.random() * 13}px`;
+      piece.style.background = COLORS[Math.floor(Math.random() * COLORS.length)];
+      piece.style.borderRadius = Math.random() > .65 ? "50%" : "2px";
+      piece.style.animationDuration = `${2.8 + Math.random() * 2.1}s`;
+      piece.style.animationDelay = `${Math.random() * .55}s`;
+      piece.style.setProperty("--drift", `${(Math.random() - .5) * 220}px`);
+      document.body.appendChild(piece);
+      window.setTimeout(() => piece.remove(), 5600);
+    }
+  }
+
+  el.pegs.forEach((pegElement, pegIndex) => {
+    pegElement.addEventListener("click", () => handlePegClick(pegIndex));
+  });
+
+  el.diskCount.addEventListener("change", () => {
+    state.diskCount = Number(el.diskCount.value);
+    resetGame();
+  });
+
+  el.restartButton.addEventListener("click", resetGame);
+  el.clearRecordsButton.addEventListener("click", clearRecords);
+
+  resetGame();
+})();
+</script>
+</body>
+</html>
