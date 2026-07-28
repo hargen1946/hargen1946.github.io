@@ -1,1 +1,671 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UFOディフェンス｜ゲームひろば</title>
 
+<link rel="stylesheet" href="/assets/base.css">
+<script src="/assets/ui.js"></script>
+
+<style>
+/* ------------------------------------------------------------
+   UFOディフェンスだけの見た目。
+   色・文字サイズ・ボタンの共通設定は base.css にあります。
+
+   var(--accent, #146c48) の2つ目の色は、万一 base.css が
+   読めなかったときの「予備の色」です。
+   ------------------------------------------------------------ */
+
+.console { max-width: 38rem; }
+
+/* ---- 設定 ---- */
+
+.settings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-bottom: 0.7rem;
+}
+
+.settings label {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--text-dim, #3d4b46);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.settings select {
+  width: 100%;
+  min-height: 2.7rem;
+  padding: 0.3rem 0.6rem;
+  border: 2px solid var(--border, #b9c7c0);
+  border-radius: 0.4rem;
+  background: var(--card, #fbf9f2);
+  color: var(--accent, #146c48);
+  font-family: var(--font, "Yu Gothic UI", "Meiryo", sans-serif);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ---- 成績 ---- */
+
+.hud {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat {
+  padding: 0.35rem 0.2rem;
+  text-align: center;
+  background: var(--card, #fbf9f2);
+  border: 1px solid var(--border, #b9c7c0);
+  border-radius: 0.4rem;
+  color: var(--text-dim, #3d4b46);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.stat b {
+  display: block;
+  margin-top: 0.1rem;
+  color: var(--accent, #146c48);
+  font-size: 1.2rem;
+}
+
+/* ---- 画面 ---- */
+
+.game-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: #020712;
+  border: 3px solid #33443c;
+  border-radius: 0.5rem;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #020712;
+  touch-action: none;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem;
+  background: rgba(2, 7, 18, 0.86);
+}
+
+.overlay[hidden] { display: none; }
+
+.overlay-box {
+  width: min(30rem, 96%);
+  padding: 1rem;
+  text-align: center;
+  background: #0d1b2c;
+  border: 3px solid #6f93b0;
+  border-radius: 0.7rem;
+}
+
+.overlay-box h2 {
+  margin: 0 0 0.4rem;
+  color: #8df0c0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.overlay-box p {
+  margin: 0 0 0.9rem;
+  color: #d3e2ec;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.overlay-box p b { color: #ffe28a; }
+
+.message {
+  min-height: 1.7rem;
+  margin-top: 0.5rem;
+  text-align: center;
+  color: var(--text-dim, #3d4b46);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* ---- 手もとのボタン ---- */
+
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.control-btn {
+  min-height: 3.4rem;
+  padding: 0.6rem 0;
+  border: 2px solid var(--border, #b9c7c0);
+  border-radius: 0.5rem;
+  background: #ffffff;
+  color: var(--text, #1a2622);
+  font-family: var(--font, "Yu Gothic UI", "Meiryo", sans-serif);
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.control-btn.fire {
+  background: var(--accent-2, #1f8a63);
+  border-color: var(--accent-2, #1f8a63);
+  color: #ffffff;
+}
+
+.control-btn:active { background: #d9ece2; border-color: var(--accent-2, #1f8a63); }
+.control-btn.fire:active { background: var(--accent, #146c48); }
+
+/* ---- 画面がせまいとき（このブロックは1つだけ。増やさないでください） ---- */
+
+@media (max-width: 560px) {
+  .back-link { display: block; text-align: center; }
+  .settings  { grid-template-columns: 1fr; }
+  .hud       { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<main class="console">
+  <a class="back-link" href="/">← ゲームひろばへ もどる</a>
+
+  <h1>UFOディフェンス</h1>
+  <p class="subtitle">ゆっくり あそべる、1画面かんけつの うちおとしゲーム</p>
+
+  <div class="settings">
+    <div>
+      <label for="enemySpeed">UFOの速さ</label>
+      <select id="enemySpeed">
+        <option value="verySlow">とても ゆっくり</option>
+        <option value="slow" selected>ゆっくり</option>
+        <option value="normal">ふつう</option>
+      </select>
+    </div>
+    <div>
+      <label for="playerSpeed">自機の速さ</label>
+      <select id="playerSpeed">
+        <option value="slow">ゆっくり</option>
+        <option value="normal" selected>ふつう</option>
+        <option value="fast">少し 速い</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="hud">
+    <div class="stat">とくてん<b id="score">0</b></div>
+    <div class="stat">さいこう<b id="highScore">0</b></div>
+    <div class="stat">のこりUFO<b id="remaining">18</b></div>
+    <div class="stat">のこり機<b id="lives">3</b></div>
+  </div>
+
+  <div class="game-wrap">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div class="overlay" id="overlay">
+      <div class="overlay-box">
+        <h2 id="overlayTitle">じゅんび できました</h2>
+        <p id="overlayText">上で速さを えらんでから、<b>ゲーム開始</b>を 押してください。</p>
+        <button type="button" class="btn" id="overlayButton">ゲーム開始</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="message" id="message" aria-live="polite">左右に動いて、UFOを ねらいましょう。</div>
+
+  <div class="controls">
+    <button type="button" class="control-btn" id="leftButton">◀ ひだり</button>
+    <button type="button" class="control-btn fire" id="fireButton">発射</button>
+    <button type="button" class="control-btn" id="rightButton">みぎ ▶</button>
+  </div>
+
+  <div class="how-to">
+    ① 左右のボタン（または ← → キー）で 自機を動かします。<br>
+    ② 「発射」（またはスペースキー）で 弾を撃ちます。<br>
+    ③ UFOを ぜんぶ倒せば クリア。1画面で おしまいです。<br>
+    ④ UFOに下まで来られるか、自機が3回あたると 終わりです。
+  </div>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+
+  const canvas = $("gameCanvas");
+  const ctx    = canvas.getContext("2d");
+  const wrap   = canvas.parentElement;
+
+  const scoreE = $("score"), hiE = $("highScore"),
+        remE   = $("remaining"), livesE = $("lives"),
+        msg    = $("message"),
+        enemySel = $("enemySpeed"), playerSel = $("playerSpeed"),
+        overlay = $("overlay"), oTitle = $("overlayTitle"),
+        oText = $("overlayText"), oBtn = $("overlayButton");
+
+  /* ---- 大きさは 800×600 で考えます（画面に合わせて拡大縮小します）---- */
+  const W = 800, H = 600;
+
+  /* ---- 速さ。数字を変えると速さが変わります ------------------
+     インベーダー迎撃ゲームより ゆっくりにしてあります。
+     -------------------------------------------------------- */
+  const ENEMY_SPEEDS  = { verySlow: 18, slow: 26, normal: 38 };
+  const PLAYER_SPEEDS = { slow: 210, normal: 285, fast: 360 };
+  const E_INTERVALS   = { verySlow: 3.3, slow: 2.8, normal: 2.3 };
+  const P_BULLET_SPEED = 520;
+  const E_BULLET_SPEED = 175;
+  const FIRE_COOLDOWN  = 0.32;
+  const DROP           = 20;
+
+  let state = "ready";
+  let score = 0, lives = 3;
+  let hi = Number(readStore("ufoDefenseHighScore") || 0);
+  let player = null, bullets = [], eBullets = [], ufos = [], parts = [];
+  let dir = 1, eSpeed = 26, pSpeed = 285, eInterval = 2.8;
+  let eTimer = 0, cool = 0, inv = 0, last = 0, anim = null;
+  const keys = { left: false, right: false };
+
+  hiE.textContent = hi;
+
+  /* 音を鳴らしてよいか。ui.js の設定を見ます */
+  function soundOn() { return !window.GH || window.GH.soundEnabled(); }
+
+  function readStore(k)    { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function writeStore(k,v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  /* ---- 画面の大きさに合わせる ---- */
+
+  function resize() {
+    const r = wrap.getBoundingClientRect();
+    if (!r.width) return;
+    const d = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width  = Math.round(r.width * d);
+    canvas.height = Math.round(r.height * d);
+    ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0);
+    draw();
+  }
+
+  /* ---- 用意 ---- */
+
+  function reset() {
+    score = 0;
+    lives = 3;
+    bullets = []; eBullets = []; parts = [];
+    dir = 1;
+    eSpeed = ENEMY_SPEEDS[enemySel.value];
+    pSpeed = PLAYER_SPEEDS[playerSel.value];
+    eInterval = E_INTERVALS[enemySel.value];
+    eTimer = 0; cool = 0; inv = 0;
+
+    player = { x: W / 2 - 34, y: H - 72, w: 68, h: 34 };
+
+    ufos = [];
+    const rows = 3, cols = 6, uw = 74, uh = 38, gx = 24, gy = 25;
+    const total = cols * uw + (cols - 1) * gx;
+    const sx = (W - total) / 2, sy = 82;
+    for (let r = 0; r < rows; r++) {
+      for (let k = 0; k < cols; k++) {
+        ufos.push({
+          x: sx + k * (uw + gx),
+          y: sy + r * (uh + gy),
+          w: uw, h: uh, alive: true,
+          wobble: Math.random() * Math.PI * 2
+        });
+      }
+    }
+    hud();
+  }
+
+  function hud() {
+    scoreE.textContent = score;
+    hiE.textContent = hi;
+    remE.textContent = ufos.filter(u => u.alive).length;
+    livesE.textContent = lives;
+  }
+
+  function start() {
+    reset();
+    state = "playing";
+    overlay.hidden = true;
+    msg.textContent = "UFOを ねらってください。";
+    last = performance.now();
+    if (anim) cancelAnimationFrame(anim);
+    getAudio();
+    tone(440, 0.12, "square", 0.11);
+    anim = requestAnimationFrame(loop);
+  }
+
+  function end(win) {
+    state = win ? "won" : "lost";
+    if (score > hi) { hi = score; writeStore("ufoDefenseHighScore", String(hi)); hiE.textContent = hi; }
+
+    if (win) {
+      confetti();
+      winSound();
+      oTitle.textContent = "ゲームクリア！";
+      oText.innerHTML = "おめでとうございます。とくてんは <b>" + score + "</b> 点です。";
+      msg.textContent = "UFOを ぜんぶ 倒しました！";
+    } else {
+      loseSound();
+      oTitle.textContent = "おしまいです";
+      oText.innerHTML = "今回の とくてんは <b>" + score + "</b> 点です。";
+      msg.textContent = "おつかれさまでした。";
+    }
+    oBtn.textContent = "もう一度 あそぶ";
+    overlay.hidden = false;
+  }
+
+  /* ---- 動かす ---- */
+
+  function fire() {
+    if (state !== "playing" || cool > 0) return;
+    bullets.push({ x: player.x + player.w / 2 - 4, y: player.y - 14, w: 8, h: 18 });
+    cool = FIRE_COOLDOWN;
+    tone(700, 0.07, "square", 0.08);
+  }
+
+  function enemyFire() {
+    const alive = ufos.filter(u => u.alive);
+    if (!alive.length) return;
+    const s = alive[Math.floor(Math.random() * alive.length)];
+    eBullets.push({ x: s.x + s.w / 2 - 4, y: s.y + s.h, w: 8, h: 18 });
+  }
+
+  function overlap(a, b) {
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  }
+
+  function damage() {
+    lives--;
+    inv = 1.5;
+    tone(90, 0.26, "sawtooth", 0.12);
+    hud();
+    if (lives <= 0) { end(false); return; }
+    msg.textContent = "自機が あたりました。のこり " + lives + " 機です。";
+    setTimeout(() => { if (state === "playing") msg.textContent = "UFOを ねらってください。"; }, 1400);
+  }
+
+  function update(dt) {
+    if (state !== "playing") return;
+
+    if (keys.left)  player.x -= pSpeed * dt;
+    if (keys.right) player.x += pSpeed * dt;
+    player.x = Math.max(8, Math.min(W - player.w - 8, player.x));
+
+    cool = Math.max(0, cool - dt);
+    inv  = Math.max(0, inv - dt);
+
+    bullets.forEach(b => b.y -= P_BULLET_SPEED * dt);
+    bullets = bullets.filter(b => b.y + b.h > 0);
+
+    eBullets.forEach(b => b.y += E_BULLET_SPEED * dt);
+    eBullets = eBullets.filter(b => b.y < H + 30);
+
+    let min = Infinity, max = -Infinity, maxY = 0;
+    ufos.forEach(u => {
+      if (!u.alive) return;
+      u.x += eSpeed * dir * dt;
+      u.wobble += dt * 4;
+      min = Math.min(min, u.x);
+      max = Math.max(max, u.x + u.w);
+      maxY = Math.max(maxY, u.y + u.h);
+    });
+
+    if (min < 18 || max > W - 18) {
+      dir *= -1;
+      ufos.forEach(u => {
+        if (!u.alive) return;
+        u.x = Math.max(18, Math.min(W - u.w - 18, u.x));
+        u.y += DROP;
+      });
+    }
+
+    eTimer += dt;
+    if (eTimer >= eInterval) { eTimer = 0; enemyFire(); }
+
+    for (const b of bullets) {
+      for (const u of ufos) {
+        if (u.alive && overlap(b, u)) {
+          u.alive = false;
+          b.y = -100;
+          score += 100;
+          explode(u.x + u.w / 2, u.y + u.h / 2);
+          tone(240, 0.10, "sawtooth", 0.10);
+          hud();
+          break;
+        }
+      }
+    }
+    bullets = bullets.filter(b => b.y > -50);
+
+    if (inv <= 0) {
+      for (const b of eBullets) {
+        if (overlap(b, player)) { b.y = H + 100; damage(); break; }
+      }
+    }
+    if (state !== "playing") return;
+
+    parts.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; p.vy += 70 * dt; });
+    parts = parts.filter(p => p.life > 0);
+
+    if (ufos.every(u => !u.alive)) { end(true); return; }
+    if (maxY > player.y - 20) { end(false); return; }
+  }
+
+  /* ---- 描く ---- */
+
+  function background() {
+    ctx.fillStyle = "#020712";
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#ffffff";
+    for (let i = 0; i < 55; i++) {
+      const px = (i * 149) % W, py = (i * 83) % (H - 90);
+      const s = (i % 5 === 0) ? 2.5 : 1.3;
+      ctx.globalAlpha = 0.35 + (i % 4) * 0.13;
+      ctx.fillRect(px, py, s, s);
+    }
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = "#31577a";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, H - 28);
+    ctx.lineTo(W, H - 28);
+    ctx.stroke();
+  }
+
+  function drawUfo(u) {
+    if (!u.alive) return;
+    const y = u.y + Math.sin(u.wobble) * 2;
+    ctx.save();
+    ctx.translate(u.x, y);
+    ctx.fillStyle = "#8af0ff";
+    ctx.beginPath(); ctx.ellipse(u.w / 2, 13, 24, 13, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#e8fdff";
+    ctx.beginPath(); ctx.ellipse(u.w / 2, 10, 13, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#8c62ff";
+    ctx.beginPath(); ctx.ellipse(u.w / 2, 25, u.w / 2, 13, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = "#fff36a";
+    for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(14 + i * 15, 26, 3.2, 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
+  }
+
+  function drawPlayer() {
+    if (!player) return;
+    if (inv > 0 && Math.floor(inv * 10) % 2 === 0) return;
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    ctx.fillStyle = "#69ff9a";
+    ctx.fillRect(9, 18, player.w - 18, 14);
+    ctx.fillStyle = "#d8fff0";
+    ctx.fillRect(player.w / 2 - 8, 3, 16, 18);
+    ctx.fillStyle = "#34c86b";
+    ctx.beginPath();
+    ctx.moveTo(0, player.h);
+    ctx.lineTo(15, 14);
+    ctx.lineTo(player.w - 15, 14);
+    ctx.lineTo(player.w, player.h);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3;
+    ctx.strokeRect(9, 18, player.w - 18, 14);
+    ctx.restore();
+  }
+
+  function drawParts() {
+    parts.forEach(p => {
+      ctx.fillStyle = (p.kind === "confetti")
+        ? "hsl(" + p.hue + " 90% 60%)"
+        : (p.life > 0.35 ? "#fff36a" : "#ff7a4f");
+      ctx.fillRect(p.x, p.y, p.size, p.kind === "confetti" ? p.size * 1.6 : p.size);
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    background();
+    ufos.forEach(drawUfo);
+    ctx.fillStyle = "#fff45c";
+    bullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
+    ctx.fillStyle = "#ff6b6b";
+    eBullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
+    drawPlayer();
+    drawParts();
+  }
+
+  function explode(px, py) {
+    for (let i = 0; i < 18; i++) {
+      parts.push({
+        x: px, y: py,
+        vx: (Math.random() - 0.5) * 180,
+        vy: (Math.random() - 0.5) * 180,
+        life: 0.45 + Math.random() * 0.35,
+        size: 3 + Math.random() * 5,
+        kind: "spark"
+      });
+    }
+  }
+
+  function confetti() {
+    parts = [];
+    for (let i = 0; i < 120; i++) {
+      parts.push({
+        x: Math.random() * W,
+        y: -20 - Math.random() * 280,
+        vx: (Math.random() - 0.5) * 80,
+        vy: 60 + Math.random() * 110,
+        life: 4 + Math.random() * 2,
+        size: 5 + Math.random() * 7,
+        kind: "confetti",
+        hue: Math.random() * 360
+      });
+    }
+    (function celebrate() {
+      const dt = 1 / 60;
+      parts.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; p.vy += 20 * dt; });
+      parts = parts.filter(p => p.life > 0 && p.y < H + 30);
+      draw();
+      if (parts.length && state === "won") requestAnimationFrame(celebrate);
+    })();
+  }
+
+  function loop(t) {
+    const dt = Math.min(0.035, (t - last) / 1000 || 0);
+    last = t;
+    update(dt);
+    draw();
+    if (state === "playing") anim = requestAnimationFrame(loop);
+  }
+
+  /* ---- 音 ---- */
+
+  let ac = null, master = null;
+
+  function getAudio() {
+    if (!ac) {
+      const A = window.AudioContext || window.webkitAudioContext;
+      if (A) { ac = new A(); master = ac.createGain(); master.gain.value = 0.95; master.connect(ac.destination); }
+    }
+    if (ac && ac.state === "suspended") ac.resume();
+    return ac;
+  }
+
+  function tone(f, d, type, v) {
+    if (!soundOn()) return;
+    getAudio();
+    if (!ac || !master) return;
+    try {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.frequency.value = f;
+      o.type = type || "sine";
+      g.gain.setValueAtTime(Math.min(0.3, (v || 0.04) * 2.8), ac.currentTime);
+      o.connect(g); g.connect(master);
+      o.start();
+      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + d);
+      o.stop(ac.currentTime + d + 0.02);
+    } catch (e) {}
+  }
+
+  function winSound()  { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, 0.22, "square", 0.09), i * 150)); }
+  function loseSound() { [260, 200, 150].forEach((f, i) => setTimeout(() => tone(f, 0.26, "sawtooth", 0.085), i * 180)); }
+
+  /* ---- 操作 ---- */
+
+  function hold(btn, key) {
+    btn.addEventListener("pointerdown", e => { e.preventDefault(); keys[key] = true; getAudio(); });
+    btn.addEventListener("pointerup", e => { e.preventDefault(); keys[key] = false; });
+    btn.addEventListener("pointercancel", () => keys[key] = false);
+    btn.addEventListener("pointerleave", () => keys[key] = false);
+  }
+
+  hold($("leftButton"), "left");
+  hold($("rightButton"), "right");
+  $("fireButton").addEventListener("pointerdown", e => { e.preventDefault(); fire(); });
+  oBtn.addEventListener("click", start);
+
+  window.addEventListener("keydown", e => {
+    if (["ArrowLeft", "ArrowRight", "Space"].includes(e.code)) e.preventDefault();
+    if (e.code === "ArrowLeft")  keys.left = true;
+    if (e.code === "ArrowRight") keys.right = true;
+    if (e.code === "Space")      fire();
+    if (e.code === "Enter" && state !== "playing") start();
+  });
+
+  window.addEventListener("keyup", e => {
+    if (e.code === "ArrowLeft")  keys.left = false;
+    if (e.code === "ArrowRight") keys.right = false;
+  });
+
+  window.addEventListener("blur", () => { keys.left = keys.right = false; });
+  window.addEventListener("resize", resize);
+
+  /* 文字の大きさを変えたときも、画面のあらさを合わせ直します */
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(wrap);
+
+  reset();
+  resize();
+})();
+</script>
+</body>
+</html>
