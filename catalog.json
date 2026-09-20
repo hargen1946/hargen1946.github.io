@@ -1,0 +1,34 @@
+[
+  {
+    "title": "スライドパズル",
+    "category": "パズル",
+    "icon": "🧩",
+    "description": "数字を順番に並べ替えて完成させるパズルです。9枚と15枚から選べます。",
+    "path": "/slide-puzzle/",
+    "tags": ["数字", "頭の体操"]
+  },
+  {
+    "title": "ハノイの塔",
+    "category": "パズル",
+    "icon": "🗼",
+    "description": "すべての円盤を右端の棒へ移しかえる、じっくり考えるパズルです。",
+    "path": "/hanoi.html",
+    "tags": ["3〜7枚", "じっくり"]
+  },
+  {
+    "title": "UFOディフェンス",
+    "category": "ゲーム",
+    "icon": "🛸",
+    "description": "ゆっくり遊べる一画面の撃ち落としゲーム。UFOを全部倒しましょう。",
+    "path": "/ufo-attack.html",
+    "tags": ["アクション", "一画面"]
+  },
+  {
+    "title": "インベーダー迎撃ゲーム",
+    "category": "ゲーム",
+    "icon": "👾",
+    "description": "左右のキーで自機を動かし、インベーダーを撃ち落とすゲームです。",
+    "path": "/invaders.html",
+    "tags": ["アクション", "キーボード"]
+  }
+]
