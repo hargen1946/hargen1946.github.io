@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>二重振り子シミュレーター</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      background: #f4f6f8;
+      color: #222;
+    }
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+    h1 {
+      font-size: 24px;
+      margin: 0 0 12px;
+    }
+    .panel {
+      background: white;
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 14px;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    .value {
+      font-weight: 700;
+    }
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 15px;
+      cursor: pointer;
+      background: #222;
+      color: white;
+      margin-right: 8px;
+      margin-top: 6px;
+    }
+    button.secondary {
+      background: #666;
+    }
+    canvas {
+      width: 100%;
+      height: auto;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      display: block;
+    }
+    .note {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>二重振り子シミュレーター</h1>
+
+  <div class="panel">
+    <div class="controls">
+      <label>
+        1本目の初期角度：
+        <span class="value" id="a1Text">120°</span>
+        <input id="a1" type="range" min="-170" max="170" value="120" step="1">
+      </label>
+
+      <label>
+        2本目の初期角度：
+        <span class="value" id="a2Text">80°</span>
+        <input id="a2" type="range" min="-170" max="170" value="80" step="1">
+      </label>
+
+      <label>
+        重力：
+        <span class="value" id="gText">9.8</span>
+        <input id="g" type="range" min="1" max="20" value="9.8" step="0.1">
+      </label>
+
+      <label>
+        摩擦の強さ：
+        <span class="value" id="dampingText">0.000</span>
+        <input id="damping" type="range" min="0.000" max="1.000" value="0.000" step="0.005">
+      </label>
+    </div>
+
+    <div>
+      <button id="startBtn">開始 / 一時停止</button>
+      <button id="resetBtn" class="secondary">リセット</button>
+      <button id="randomBtn" class="secondary">ランダム</button>
+    </div>
+
+    <div class="note">
+      ほとんど同じ角度から始めても、しばらくすると動きが大きく変わります。
+      これがカオス的な振る舞いの面白いところです。
+    </div>
+  </div>
+
+  <canvas id="canvas" width="900" height="650"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const a1Slider = document.getElementById("a1");
+const a2Slider = document.getElementById("a2");
+const gSlider = document.getElementById("g");
+const dampingSlider = document.getElementById("damping");
+
+const a1Text = document.getElementById("a1Text");
+const a2Text = document.getElementById("a2Text");
+const gText = document.getElementById("gText");
+const dampingText = document.getElementById("dampingText");
+
+const startBtn = document.getElementById("startBtn");
+const resetBtn = document.getElementById("resetBtn");
+const randomBtn = document.getElementById("randomBtn");
+
+const m1 = 1.0;
+const m2 = 1.0;
+const L1 = 1.0;
+const L2 = 1.0;
+
+let a1 = 120 * Math.PI / 180;
+let a2 = 80 * Math.PI / 180;
+let w1 = 0;
+let w2 = 0;
+
+let running = true;
+let lastTime = performance.now();
+let trail = [];
+
+function updateLabels() {
+  a1Text.textContent = `${a1Slider.value}°`;
+  a2Text.textContent = `${a2Slider.value}°`;
+  gText.textContent = Number(gSlider.value).toFixed(1);
+  dampingText.textContent = Number(dampingSlider.value).toFixed(3);
+}
+
+function resetSimulation() {
+  a1 = Number(a1Slider.value) * Math.PI / 180;
+  a2 = Number(a2Slider.value) * Math.PI / 180;
+  w1 = 0;
+  w2 = 0;
+  trail = [];
+}
+
+function accelerations(theta1, theta2, omega1, omega2) {
+  const g = Number(gSlider.value);
+
+  const delta = theta1 - theta2;
+
+  const den1 = L1 * (2 * m1 + m2 - m2 * Math.cos(2 * delta));
+  const den2 = L2 * (2 * m1 + m2 - m2 * Math.cos(2 * delta));
+
+  const alpha1 =
+    (
+      -g * (2 * m1 + m2) * Math.sin(theta1)
+      - m2 * g * Math.sin(theta1 - 2 * theta2)
+      - 2 * Math.sin(delta) * m2 *
+        (omega2 * omega2 * L2 + omega1 * omega1 * L1 * Math.cos(delta))
+    ) / den1;
+
+  const alpha2 =
+    (
+      2 * Math.sin(delta) *
+      (
+        omega1 * omega1 * L1 * (m1 + m2)
+        + g * (m1 + m2) * Math.cos(theta1)
+        + omega2 * omega2 * L2 * m2 * Math.cos(delta)
+      )
+    ) / den2;
+
+  return [alpha1, alpha2];
+}
+
+function derivatives(state) {
+  const [theta1, theta2, omega1, omega2] = state;
+  const [alpha1, alpha2] = accelerations(theta1, theta2, omega1, omega2);
+  return [omega1, omega2, alpha1, alpha2];
+}
+
+function rk4Step(dt) {
+  const s = [a1, a2, w1, w2];
+
+  const k1 = derivatives(s);
+  const s2 = s.map((v, i) => v + k1[i] * dt / 2);
+
+  const k2 = derivatives(s2);
+  const s3 = s.map((v, i) => v + k2[i] * dt / 2);
+
+  const k3 = derivatives(s3);
+  const s4 = s.map((v, i) => v + k3[i] * dt);
+
+  const k4 = derivatives(s4);
+
+  const next = s.map((v, i) =>
+    v + dt * (k1[i] + 2*k2[i] + 2*k3[i] + k4[i]) / 6
+  );
+
+  a1 = next[0];
+  a2 = next[1];
+  w1 = next[2];
+  w2 = next[3];
+
+  // 摩擦係数は「1秒あたり」の減衰量として扱う。
+  // 0 = 摩擦なし。値を大きくすると徐々に止まる。
+  const damping = Number(dampingSlider.value);
+  const factor = Math.exp(-damping * dt);
+  w1 *= factor;
+  w2 *= factor;
+}
+
+function draw() {
+  const W = canvas.width;
+  const H = canvas.height;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const ox = W / 2;
+  const oy = 145;
+  const scale = 180;
+
+  const x1 = ox + Math.sin(a1) * L1 * scale;
+  const y1 = oy + Math.cos(a1) * L1 * scale;
+
+  const x2 = x1 + Math.sin(a2) * L2 * scale;
+  const y2 = y1 + Math.cos(a2) * L2 * scale;
+
+  trail.push({x: x2, y: y2});
+  if (trail.length > 650) trail.shift();
+
+  // 軌跡
+  if (trail.length > 1) {
+    ctx.beginPath();
+    ctx.moveTo(trail[0].x, trail[0].y);
+    for (let i = 1; i < trail.length; i++) {
+      ctx.lineTo(trail[i].x, trail[i].y);
+    }
+    ctx.strokeStyle = "rgba(60, 100, 180, 0.45)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // 支点
+  ctx.beginPath();
+  ctx.arc(ox, oy, 7, 0, Math.PI * 2);
+  ctx.fillStyle = "#222";
+  ctx.fill();
+
+  // 棒
+  ctx.beginPath();
+  ctx.moveTo(ox, oy);
+  ctx.lineTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.strokeStyle = "#222";
+  ctx.lineWidth = 5;
+  ctx.stroke();
+
+  // おもり1
+  ctx.beginPath();
+  ctx.arc(x1, y1, 15, 0, Math.PI * 2);
+  ctx.fillStyle = "#4a90e2";
+  ctx.fill();
+
+  // おもり2
+  ctx.beginPath();
+  ctx.arc(x2, y2, 18, 0, Math.PI * 2);
+  ctx.fillStyle = "#e26a4a";
+  ctx.fill();
+}
+
+function animate(now) {
+  const elapsed = Math.min((now - lastTime) / 1000, 0.03);
+  lastTime = now;
+
+  if (running) {
+    // 数値計算を少し細かくする
+    const substeps = 5;
+    const dt = elapsed / substeps;
+
+    for (let i = 0; i < substeps; i++) {
+      rk4Step(dt);
+    }
+  }
+
+  draw();
+  requestAnimationFrame(animate);
+}
+
+startBtn.addEventListener("click", () => {
+  running = !running;
+});
+
+resetBtn.addEventListener("click", () => {
+  resetSimulation();
+});
+
+randomBtn.addEventListener("click", () => {
+  a1Slider.value = Math.round(-150 + Math.random() * 300);
+  a2Slider.value = Math.round(-150 + Math.random() * 300);
+  updateLabels();
+  resetSimulation();
+});
+
+[a1Slider, a2Slider].forEach(el => {
+  el.addEventListener("input", () => {
+    updateLabels();
+    resetSimulation();
+  });
+});
+
+[gSlider, dampingSlider].forEach(el => {
+  el.addEventListener("input", updateLabels);
+});
+
+updateLabels();
+resetSimulation();
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
