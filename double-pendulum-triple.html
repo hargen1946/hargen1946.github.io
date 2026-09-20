@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>二重・三重振り子シミュレーター</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f4f6f8; color: #222; }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 18px; }
+    .back-link { display: inline-block; margin-bottom: 14px; padding: 10px 14px; background: #fff; color: #222; border: 1px solid #d7dce2; border-radius: 10px; text-decoration: none; font-weight: 700; }
+    h1 { font-size: clamp(23px, 5vw, 30px); margin: 0 0 12px; }
+    .panel, canvas { background: #fff; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+    .panel { padding: 14px; margin-bottom: 14px; }
+    .mode-title { margin: 0 0 7px; font-size: 15px; font-weight: 700; }
+    .mode-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
+    button { border: 0; border-radius: 10px; padding: 10px 14px; font-size: 16px; cursor: pointer; background: #253047; color: #fff; margin-top: 6px; }
+    button.secondary { background: #64748b; }
+    button.mode { background: #e7ecf3; color: #243042; margin-top: 0; }
+    button.mode[aria-pressed="true"] { background: #1f6feb; color: #fff; }
+    .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; align-items: end; }
+    label { display: block; font-size: 15px; }
+    input[type="range"] { width: 100%; accent-color: #1f6feb; }
+    .value { font-weight: 700; }
+    .note { font-size: 14px; color: #4b5563; line-height: 1.65; margin: 12px 0 0; }
+    canvas { width: 100%; height: auto; display: block; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back-link" href="/">← ゲームひろばへ戻る</a>
+    <h1>二重・三重振り子シミュレーター</h1>
+    <div class="panel">
+      <p class="mode-title">振り子の数を選ぶ</p>
+      <div class="mode-buttons" role="group" aria-label="振り子の数">
+        <button class="mode" id="mode2" aria-pressed="true">二重振り子</button>
+        <button class="mode" id="mode3" aria-pressed="false">三重振り子</button>
+      </div>
+      <div class="controls">
+        <label>1本目の初期角度： <span class="value" id="a1Text">120°</span><input id="a1" type="range" min="-170" max="170" value="120" step="1"></label>
+        <label>2本目の初期角度： <span class="value" id="a2Text">80°</span><input id="a2" type="range" min="-170" max="170" value="80" step="1"></label>
+        <label id="a3Row" hidden>3本目の初期角度： <span class="value" id="a3Text">40°</span><input id="a3" type="range" min="-170" max="170" value="40" step="1"></label>
+        <label>重力： <span class="value" id="gText">9.8</span><input id="g" type="range" min="1" max="20" value="9.8" step="0.1"></label>
+        <label>摩擦の強さ： <span class="value" id="dampingText">0.000</span><input id="damping" type="range" min="0" max="1" value="0" step="0.005"></label>
+      </div>
+      <div>
+        <button id="startBtn">一時停止</button>
+        <button id="resetBtn" class="secondary">リセット</button>
+        <button id="randomBtn" class="secondary">ランダム</button>
+      </div>
+      <p class="note">三重振り子では、ほんの少しの初期角度の違いが、しばらくすると大きな動きの違いになります。動きを止めてから角度を変えることもできます。</p>
+    </div>
+    <canvas id="canvas" width="900" height="650" aria-label="振り子の動き"></canvas>
+  </div>
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const sliders = [document.getElementById('a1'), document.getElementById('a2'), document.getElementById('a3')];
+  const angleTexts = [document.getElementById('a1Text'), document.getElementById('a2Text'), document.getElementById('a3Text')];
+  const gSlider = document.getElementById('g');
+  const dampingSlider = document.getElementById('damping');
+  const mode2 = document.getElementById('mode2');
+  const mode3 = document.getElementById('mode3');
+  const a3Row = document.getElementById('a3Row');
+  const startBtn = document.getElementById('startBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const randomBtn = document.getElementById('randomBtn');
+  const gText = document.getElementById('gText');
+  const dampingText = document.getElementById('dampingText');
+
+  let count = 2;
+  let theta = [];
+  let omega = [];
+  let running = true;
+  let lastTime = performance.now();
+  let trail = [];
+  const lengths = [1, 1, 1];
+  const masses = [1, 1, 1];
+
+  const rad = degrees => degrees * Math.PI / 180;
+
+  function updateLabels() {
+    sliders.forEach((slider, i) => angleTexts[i].textContent = `${slider.value}°`);
+    gText.textContent = Number(gSlider.value).toFixed(1);
+    dampingText.textContent = Number(dampingSlider.value).toFixed(3);
+  }
+
+  function resetSimulation() {
+    theta = sliders.slice(0, count).map(slider => rad(Number(slider.value)));
+    omega = Array(count).fill(0);
+    trail = [];
+  }
+
+  function setCount(nextCount) {
+    count = nextCount;
+    mode2.setAttribute('aria-pressed', String(count === 2));
+    mode3.setAttribute('aria-pressed', String(count === 3));
+    a3Row.hidden = count !== 3;
+    resetSimulation();
+  }
+
+  function accumulatedMass(from) {
+    let total = 0;
+    for (let i = from; i < count; i++) total += masses[i];
+    return total;
+  }
+
+  function massMatrix(angles) {
+    return Array.from({ length: count }, (_, i) =>
+      Array.from({ length: count }, (_, j) => {
+        const sharedMass = accumulatedMass(Math.max(i, j));
+        return sharedMass * lengths[i] * lengths[j] * Math.cos(angles[i] - angles[j]);
+      })
+    );
+  }
+
+  function dMass(i, j, k, angles) {
+    if (i === j) return 0;
+    const sharedMass = accumulatedMass(Math.max(i, j));
+    const base = sharedMass * lengths[i] * lengths[j] * Math.sin(angles[i] - angles[j]);
+    if (k === i) return -base;
+    if (k === j) return base;
+    return 0;
+  }
+
+  function solve(matrix, vector) {
+    const a = matrix.map((row, i) => [...row, vector[i]]);
+    for (let col = 0; col < count; col++) {
+      let pivot = col;
+      for (let row = col + 1; row < count; row++) if (Math.abs(a[row][col]) > Math.abs(a[pivot][col])) pivot = row;
+      [a[col], a[pivot]] = [a[pivot], a[col]];
+      const divisor = a[col][col] || 1e-10;
+      for (let j = col; j <= count; j++) a[col][j] /= divisor;
+      for (let row = 0; row < count; row++) {
+        if (row === col) continue;
+        const factor = a[row][col];
+        for (let j = col; j <= count; j++) a[row][j] -= factor * a[col][j];
+      }
+    }
+    return a.map(row => row[count]);
+  }
+
+  function accelerations(angles, speeds) {
+    const matrix = massMatrix(angles);
+    const gravity = Number(gSlider.value);
+    const rhs = Array(count).fill(0);
+    for (let i = 0; i < count; i++) {
+      let coriolis = 0;
+      for (let j = 0; j < count; j++) {
+        for (let k = 0; k < count; k++) {
+          const gamma = (dMass(i, j, k, angles) + dMass(i, k, j, angles) - dMass(j, k, i, angles)) / 2;
+          coriolis += gamma * speeds[j] * speeds[k];
+        }
+      }
+      const gravityTerm = accumulatedMass(i) * gravity * lengths[i] * Math.sin(angles[i]);
+      rhs[i] = -coriolis - gravityTerm;
+    }
+    return solve(matrix, rhs);
+  }
+
+  function derivative(angles, speeds) {
+    return { angle: speeds, speed: accelerations(angles, speeds) };
+  }
+
+  function rk4Step(dt) {
+    const add = (a, b, factor) => a.map((value, i) => value + b[i] * factor);
+    const k1 = derivative(theta, omega);
+    const k2 = derivative(add(theta, k1.angle, dt / 2), add(omega, k1.speed, dt / 2));
+    const k3 = derivative(add(theta, k2.angle, dt / 2), add(omega, k2.speed, dt / 2));
+    const k4 = derivative(add(theta, k3.angle, dt), add(omega, k3.speed, dt));
+    theta = theta.map((v, i) => v + dt * (k1.angle[i] + 2 * k2.angle[i] + 2 * k3.angle[i] + k4.angle[i]) / 6);
+    omega = omega.map((v, i) => v + dt * (k1.speed[i] + 2 * k2.speed[i] + 2 * k3.speed[i] + k4.speed[i]) / 6);
+    const damping = Math.exp(-Number(dampingSlider.value) * dt);
+    omega = omega.map(v => v * damping);
+  }
+
+  function draw() {
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    const points = [{ x: W / 2, y: 125 }];
+    const scale = count === 3 ? 135 : 180;
+    theta.forEach((angle, i) => {
+      const previous = points[i];
+      points.push({ x: previous.x + Math.sin(angle) * lengths[i] * scale, y: previous.y + Math.cos(angle) * lengths[i] * scale });
+    });
+    trail.push(points[points.length - 1]);
+    if (trail.length > 700) trail.shift();
+    if (trail.length > 1) {
+      ctx.beginPath(); ctx.moveTo(trail[0].x, trail[0].y);
+      trail.slice(1).forEach(point => ctx.lineTo(point.x, point.y));
+      ctx.strokeStyle = 'rgba(31, 111, 235, .38)'; ctx.lineWidth = 2; ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(points[0].x, points[0].y, 7, 0, Math.PI * 2); ctx.fillStyle = '#1f2937'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y); points.slice(1).forEach(point => ctx.lineTo(point.x, point.y));
+    ctx.strokeStyle = '#1f2937'; ctx.lineWidth = 5; ctx.stroke();
+    const colors = ['#2563eb', '#e26a4a', '#16a34a'];
+    points.slice(1).forEach((point, i) => { ctx.beginPath(); ctx.arc(point.x, point.y, 15 + i * 2, 0, Math.PI * 2); ctx.fillStyle = colors[i]; ctx.fill(); });
+  }
+
+  function animate(now) {
+    const elapsed = Math.min((now - lastTime) / 1000, 0.03);
+    lastTime = now;
+    if (running) for (let i = 0; i < 5; i++) rk4Step(elapsed / 5);
+    draw();
+    requestAnimationFrame(animate);
+  }
+
+  mode2.addEventListener('click', () => setCount(2));
+  mode3.addEventListener('click', () => setCount(3));
+  startBtn.addEventListener('click', () => { running = !running; startBtn.textContent = running ? '一時停止' : '開始'; });
+  resetBtn.addEventListener('click', resetSimulation);
+  randomBtn.addEventListener('click', () => { sliders.slice(0, count).forEach(slider => slider.value = Math.round(-150 + Math.random() * 300)); updateLabels(); resetSimulation(); });
+  sliders.forEach(slider => slider.addEventListener('input', () => { updateLabels(); resetSimulation(); }));
+  [gSlider, dampingSlider].forEach(slider => slider.addEventListener('input', updateLabels));
+  updateLabels(); resetSimulation(); requestAnimationFrame(animate);
+</script>
+</body>
+</html>
