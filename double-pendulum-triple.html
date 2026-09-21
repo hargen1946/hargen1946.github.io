@@ -15,6 +15,8 @@
     h1 { font-size: clamp(23px, 5vw, 30px); margin: 0 0 12px; }
     .panel, canvas { background: #fff; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
     .panel { padding: 14px; margin-bottom: 14px; }
+    .panel summary { color: #1f2937; font-size: 1.05rem; font-weight: 800; cursor: pointer; }
+    .panel[open] summary { margin-bottom: 1rem; }
     .mode-title { margin: 0 0 7px; font-size: 15px; font-weight: 700; }
     .mode-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
     button { border: 0; border-radius: 10px; padding: 10px 14px; font-size: 16px; cursor: pointer; background: #253047; color: #fff; margin-top: 6px; }
@@ -48,7 +50,8 @@
   <div class="wrap">
     <a class="back-link" href="/">← ゲームひろばへ戻る</a>
     <h1>二重・三重振り子シミュレーター</h1>
-    <div class="panel">
+    <details class="panel">
+      <summary>設定を開く（振り子の数・角度・重力など）</summary>
       <p class="mode-title">振り子の数を選ぶ</p>
       <div class="mode-buttons" role="group" aria-label="振り子の数">
         <button class="mode" id="mode2" aria-pressed="true">二重振り子</button>
@@ -68,7 +71,7 @@
         <button id="celebrateBtn" class="celebrate-button">花吹雪をためす</button>
       </div>
       <p class="note">三重振り子では、ほんの少しの初期角度の違いが、しばらくすると大きな動きの違いになります。動きを止めてから角度を変えることもできます。</p>
-    </div>
+    </details>
     <canvas id="canvas" width="900" height="650" aria-label="振り子の動き"></canvas>
   </div>
 <script>
