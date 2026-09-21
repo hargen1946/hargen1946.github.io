@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>二重・三重振り子シミュレーター</title>
+  <link rel="stylesheet" href="/assets/base.css">
+  <script src="/assets/ui.js"></script>
   <style>
     :root { color-scheme: light; }
     * { box-sizing: border-box; }
@@ -25,6 +27,20 @@
     .value { font-weight: 700; }
     .note { font-size: 14px; color: #4b5563; line-height: 1.65; margin: 12px 0 0; }
     canvas { width: 100%; height: auto; display: block; }
+    .celebrate-button { background: #c64d71; }
+    .confetti {
+      position: fixed;
+      top: -2rem;
+      z-index: 50;
+      width: 0.65rem;
+      height: 1rem;
+      border-radius: 0.15rem;
+      pointer-events: none;
+      animation: confetti-fall 2.8s linear forwards;
+    }
+    @keyframes confetti-fall {
+      to { transform: translate3d(var(--drift), 110vh, 0) rotate(720deg); opacity: 0; }
+    }
     [hidden] { display: none !important; }
   </style>
 </head>
@@ -49,6 +65,7 @@
         <button id="startBtn">一時停止</button>
         <button id="resetBtn" class="secondary">リセット</button>
         <button id="randomBtn" class="secondary">ランダム</button>
+        <button id="celebrateBtn" class="celebrate-button">花吹雪をためす</button>
       </div>
       <p class="note">三重振り子では、ほんの少しの初期角度の違いが、しばらくすると大きな動きの違いになります。動きを止めてから角度を変えることもできます。</p>
     </div>
@@ -67,6 +84,7 @@
   const startBtn = document.getElementById('startBtn');
   const resetBtn = document.getElementById('resetBtn');
   const randomBtn = document.getElementById('randomBtn');
+  const celebrateBtn = document.getElementById('celebrateBtn');
   const gText = document.getElementById('gText');
   const dampingText = document.getElementById('dampingText');
 
@@ -207,11 +225,26 @@
     requestAnimationFrame(animate);
   }
 
+  function launchConfetti() {
+    const colors = ['#e85d75', '#f4b942', '#4db6ac', '#6c8df0', '#c67adf'];
+    for (let i = 0; i < 56; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti';
+      piece.style.left = `${Math.random() * 100}vw`;
+      piece.style.background = colors[i % colors.length];
+      piece.style.setProperty('--drift', `${-130 + Math.random() * 260}px`);
+      piece.style.animationDelay = `${Math.random() * 0.45}s`;
+      document.body.appendChild(piece);
+      piece.addEventListener('animationend', () => piece.remove());
+    }
+  }
+
   mode2.addEventListener('click', () => setCount(2));
   mode3.addEventListener('click', () => setCount(3));
   startBtn.addEventListener('click', () => { running = !running; startBtn.textContent = running ? '一時停止' : '開始'; });
   resetBtn.addEventListener('click', resetSimulation);
   randomBtn.addEventListener('click', () => { sliders.slice(0, count).forEach(slider => slider.value = Math.round(-150 + Math.random() * 300)); updateLabels(); resetSimulation(); });
+  celebrateBtn.addEventListener('click', launchConfetti);
   sliders.forEach(slider => slider.addEventListener('input', () => { updateLabels(); resetSimulation(); }));
   [gSlider, dampingSlider].forEach(slider => slider.addEventListener('input', updateLabels));
   updateLabels(); resetSimulation(); requestAnimationFrame(animate);
