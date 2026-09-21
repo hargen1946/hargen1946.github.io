@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>振り子波シミュレーター｜ゲームひろば</title>
+  <link rel="stylesheet" href="/assets/base.css">
+  <script src="/assets/ui.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f6f8;
+      color: #222;
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 10px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 1.3rem;
+      line-height: 1.3;
+    }
+    .topbar {
+      background: #fff;
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 10px;
+    }
+    .toprow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .desc {
+      font-size: 0.9rem;
+      color: #444;
+      line-height: 1.5;
+      flex: 1 1 320px;
+    }
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 9px 14px;
+      font-size: 1rem;
+      cursor: pointer;
+      background: #222;
+      color: white;
+      white-space: nowrap;
+    }
+    .panel {
+      background: #fff;
+      border-radius: 14px;
+      padding: 10px 12px 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 10px;
+      display: none;
+    }
+    .panel.open {
+      display: block;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 14px;
+      margin-top: 4px;
+    }
+    label {
+      display: block;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+    input[type="range"] {
+      width: 100%;
+      margin-top: 4px;
+    }
+    .value {
+      font-weight: 700;
+    }
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    .note {
+      margin-top: 10px;
+      background: #fff;
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: #555;
+    }
+
+    @media (max-width: 640px) {
+      .wrap {
+        padding: 8px;
+      }
+      h1 {
+        font-size: 1.2rem;
+      }
+      .controls {
+        grid-template-columns: 1fr;
+      }
+      .toprow {
+        align-items: stretch;
+      }
+      button {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="/">← ゲームひろばへ戻る</a>
+  <h1>振り子波シミュレーター</h1>
+
+  <div class="topbar">
+    <div class="toprow">
+      <div class="desc" id="statusText">
+        最初は静止しています。<strong>設定</strong>を押して調整し、<strong>閉じる</strong>を押すと最初から動きます。
+      </div>
+      <button id="toggleBtn">設定</button>
+    </div>
+  </div>
+
+  <div class="panel" id="settingsPanel">
+    <div class="controls">
+      <label>
+        振り子の本数：
+        <span class="value" id="countText">18</span>
+        <input id="count" type="range" min="8" max="30" value="18" step="1">
+      </label>
+
+      <label>
+        動きの速さ：
+        <span class="value" id="speedText">1.00</span>
+        <input id="speed" type="range" min="0.25" max="2.00" value="1.00" step="0.05">
+      </label>
+
+      <label>
+        振れ幅：
+        <span class="value" id="ampText">42°</span>
+        <input id="amp" type="range" min="10" max="70" value="42" step="1">
+      </label>
+
+      <label>
+        残像：
+        <span class="value" id="trailText">あり</span>
+        <input id="trail" type="range" min="0" max="1" value="1" step="1">
+      </label>
+    </div>
+  </div>
+
+  <canvas id="canvas" width="980" height="660"></canvas>
+
+  <div class="note">
+    「設定」を押すと動きは止まり、設定画面が開きます。<br>
+    「閉じる」を押すと設定画面が閉じて、<strong>最初から再生</strong>されます。
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const panel = document.getElementById("settingsPanel");
+const toggleBtn = document.getElementById("toggleBtn");
+const statusText = document.getElementById("statusText");
+
+const countSlider = document.getElementById("count");
+const speedSlider = document.getElementById("speed");
+const ampSlider = document.getElementById("amp");
+const trailSlider = document.getElementById("trail");
+
+const countText = document.getElementById("countText");
+const speedText = document.getElementById("speedText");
+const ampText = document.getElementById("ampText");
+const trailText = document.getElementById("trailText");
+
+let settingsOpen = false;
+let running = false;
+let simStart = null;
+let simElapsed = 0;
+let lastFrame = performance.now();
+let prevTrailState = null;
+
+function updateLabels() {
+  countText.textContent = countSlider.value;
+  speedText.textContent = Number(speedSlider.value).toFixed(2);
+  ampText.textContent = `${ampSlider.value}°`;
+  trailText.textContent = trailSlider.value === "1" ? "あり" : "なし";
+}
+
+function clearCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function restartAndRun() {
+  simElapsed = 0;
+  simStart = performance.now();
+  running = true;
+  clearCanvas();
+  prevTrailState = null;
+  statusText.innerHTML = '再生中です。もう一度<strong>設定</strong>を押すと止めて設定できます。';
+}
+
+function stopForSettings() {
+  running = false;
+  statusText.innerHTML = '設定を変えたら<strong>閉じる</strong>を押してください。最初から動きます。';
+}
+
+function openSettings() {
+  settingsOpen = true;
+  panel.classList.add("open");
+  toggleBtn.textContent = "閉じる";
+  stopForSettings();
+}
+
+function closeSettingsAndStart() {
+  settingsOpen = false;
+  panel.classList.remove("open");
+  toggleBtn.textContent = "設定";
+  restartAndRun();
+}
+
+function drawScene(t) {
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const trailsOn = trailSlider.value === "1";
+
+  if (prevTrailState === null || prevTrailState !== trailsOn) {
+    clearCanvas();
+    prevTrailState = trailsOn;
+  }
+
+  if (trailsOn && running) {
+    ctx.fillStyle = "rgba(255,255,255,0.18)";
+    ctx.fillRect(0, 0, W, H);
+  } else {
+    clearCanvas();
+  }
+
+  const count = Number(countSlider.value);
+  const speed = Number(speedSlider.value);
+  const amp = Number(ampSlider.value) * Math.PI / 180;
+
+  const time = t * speed;
+  const topY = 105;
+  const minLen = 210;
+  const maxLen = 470;
+
+  const left = 70;
+  const right = W - 70;
+  const spacing = count > 1 ? (right - left) / (count - 1) : 0;
+
+  ctx.beginPath();
+  ctx.moveTo(left - 26, topY);
+  ctx.lineTo(right + 26, topY);
+  ctx.strokeStyle = "#222";
+  ctx.lineWidth = 5;
+  ctx.stroke();
+
+  for (let i = 0; i < count; i++) {
+    const x0 = left + i * spacing;
+    const ratio = i / Math.max(1, count - 1);
+    const len = minLen + (maxLen - minLen) * ratio;
+
+    const baseFreq = 1.55;
+    const freq = baseFreq + i * 0.035;
+    const angle = amp * Math.sin(freq * time);
+
+    const x = x0 + Math.sin(angle) * len;
+    const y = topY + Math.cos(angle) * len;
+
+    ctx.beginPath();
+    ctx.moveTo(x0, topY);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = "rgba(40,40,40,0.72)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(x0, topY, 3, 0, Math.PI * 2);
+    ctx.fillStyle = "#222";
+    ctx.fill();
+
+    const hue = 200 + i * 4;
+    ctx.beginPath();
+    ctx.arc(x, y, 9, 0, Math.PI * 2);
+    ctx.fillStyle = `hsl(${hue}, 70%, 55%)`;
+    ctx.fill();
+  }
+
+  ctx.fillStyle = "rgba(0,0,0,0.68)";
+  ctx.font = "16px system-ui, sans-serif";
+
+  if (!running && simElapsed === 0) {
+    ctx.fillText("静止画面です。設定して「閉じる」で最初から動きます", 20, 30);
+  } else if (!running && settingsOpen) {
+    ctx.fillText("設定中です。「閉じる」で最初から再生します", 20, 30);
+  } else {
+    ctx.fillText("最初にそろって、少しずつ模様が崩れていきます", 20, 30);
+  }
+}
+
+function animate(now) {
+  const dt = Math.min((now - lastFrame) / 1000, 0.03);
+  lastFrame = now;
+
+  if (running) {
+    simElapsed += dt;
+  }
+
+  drawScene(simElapsed);
+  requestAnimationFrame(animate);
+}
+
+toggleBtn.addEventListener("click", () => {
+  if (!settingsOpen) {
+    openSettings();
+  } else {
+    closeSettingsAndStart();
+  }
+});
+
+[countSlider, speedSlider, ampSlider, trailSlider].forEach(el => {
+  el.addEventListener("input", () => {
+    updateLabels();
+    if (!running) {
+      drawScene(0);
+    }
+  });
+});
+
+updateLabels();
+drawScene(0);
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
