@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="110" fill="#0f6b4c"/>
+  <circle cx="256" cy="256" r="172" fill="#dff4e9"/>
+  <text x="256" y="326" text-anchor="middle" font-family="serif" font-size="250" font-weight="bold" fill="#0f6b4c">遊</text>
+  <circle cx="410" cy="108" r="42" fill="#f3b43f"/>
+</svg>

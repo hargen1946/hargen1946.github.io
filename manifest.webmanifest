@@ -1,0 +1,12 @@
+{
+  "name": "ゲームひろば",
+  "short_name": "ゲームひろば",
+  "description": "ゲーム・パズル・便利アプリのひろばです。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#edf4ef",
+  "theme_color": "#0f6b4c",
+  "icons": [
+    { "src": "/assets/game-plaza-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
