@@ -8,6 +8,38 @@
   var emptyMessage = document.getElementById("empty-message");
   var items = [];
   var selectedCategory = "すべて";
+var installButton = document.getElementById("install-button");
+var installHelp = document.getElementById("install-help");
+var installPrompt;
+var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+var isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+
+if (isMobile && installButton) {
+  installButton.hidden = false;
+}
+
+  window.addEventListener("beforeinstallprompt", function (event) {
+    event.preventDefault();
+    installPrompt = event;
+    installButton.hidden = false;
+  });
+
+  if (installButton) {
+    installButton.addEventListener("click", function () {
+      if (installPrompt) {
+        installPrompt.prompt();
+        installPrompt.userChoice.then(function () {
+          installPrompt = null;
+          installButton.hidden = true;
+        });
+        return;
+      }
+      installHelp.hidden = false;
+      installHelp.textContent = isIOS
+        ? "iPhoneでは、画面下の共有ボタンから「ホーム画面に追加」を選んでください。"
+        : "Androidでは、画面右上の︙メニューから「ホーム画面に追加」を選んでください。";
+    });
+  }
 
   function makeElement(tag, className, text) {
     var element = document.createElement(tag);

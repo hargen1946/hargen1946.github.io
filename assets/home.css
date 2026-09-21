@@ -109,6 +109,23 @@ html { scroll-behavior: smooth; }
   box-shadow: 0 0.15rem 0 #bd7d12;
 }
 
+.install-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 3rem;
+  margin: 0.85rem 0 0;
+  padding: 0.65rem 1rem;
+  border: 2px solid rgba(255,255,255,.75);
+  border-radius: 999px;
+  background: rgba(255,255,255,.15);
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.install-help { margin: .65rem 0 0; color: #f1fff8; font-size: .78rem; line-height: 1.55; }
+
 .hero-mark {
   position: relative;
   z-index: 1;
