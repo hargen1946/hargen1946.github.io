@@ -42,8 +42,8 @@
   /* --- 文字の大きさ --- */
 
   function currentSize() {
-    var s = read(SIZE_KEY, "normal");
-    return SIZES.indexOf(s) === -1 ? "normal" : s;
+    var s = read(SIZE_KEY, "small");
+    return SIZES.indexOf(s) === -1 ? "small" : s;
   }
 
   function applySize(size) {
