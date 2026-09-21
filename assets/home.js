@@ -2,12 +2,11 @@
   "use strict";
 
   var grid = document.getElementById("work-grid");
-  var search = document.getElementById("catalog-search");
   var filters = document.getElementById("filter-list");
   var resultCount = document.getElementById("result-count");
   var emptyMessage = document.getElementById("empty-message");
   var items = [];
-  var selectedCategory = "すべて";
+  var selectedCategory = null;
 var installButton = document.getElementById("install-button");
 var installHelp = document.getElementById("install-help");
 var installPrompt;
@@ -48,23 +47,8 @@ if (isMobile && installButton) {
     return element;
   }
 
-  function normalized(value) {
-    return String(value || "").toLocaleLowerCase("ja").replace(/\s+/g, "");
-  }
-
-  function itemMatches(item, query) {
-    if (selectedCategory !== "すべて" && item.category !== selectedCategory) {
-      return false;
-    }
-
-    if (!query) { return true; }
-
-    return normalized([
-      item.title,
-      item.category,
-      item.description,
-      (item.tags || []).join(" ")
-    ].join(" ")).indexOf(query) !== -1;
+  function itemMatches(item) {
+    return !selectedCategory || item.category === selectedCategory;
   }
 
   function createCard(item, index) {
@@ -102,9 +86,8 @@ if (isMobile && installButton) {
   }
 
   function render() {
-    var query = normalized(search.value);
     var visible = items.filter(function (item) {
-      return itemMatches(item, query);
+      return itemMatches(item);
     });
 
     grid.replaceChildren();
@@ -117,7 +100,7 @@ if (isMobile && installButton) {
   }
 
   function buildFilters() {
-    var categories = ["すべて"];
+    var categories = [];
     items.forEach(function (item) {
       if (categories.indexOf(item.category) === -1) {
         categories.push(item.category);
@@ -129,17 +112,15 @@ if (isMobile && installButton) {
       button.type = "button";
       button.setAttribute("aria-pressed", category === selectedCategory ? "true" : "false");
       button.addEventListener("click", function () {
-        selectedCategory = category;
+        selectedCategory = selectedCategory === category ? null : category;
         Array.prototype.forEach.call(filters.children, function (child) {
-          child.setAttribute("aria-pressed", child === button ? "true" : "false");
+          child.setAttribute("aria-pressed", child === button && selectedCategory ? "true" : "false");
         });
         render();
       });
       filters.appendChild(button);
     });
   }
-
-  search.addEventListener("input", render);
 
   fetch("/catalog.json")
     .then(function (response) {
