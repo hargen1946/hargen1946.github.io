@@ -21,6 +21,7 @@
     .mode-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
     button { border: 0; border-radius: 10px; padding: 10px 14px; font-size: 16px; cursor: pointer; background: #253047; color: #fff; margin-top: 6px; }
     button.secondary { background: #64748b; }
+    button.close-settings { background: #0f7a54; }
     button.mode { background: #e7ecf3; color: #243042; margin-top: 0; }
     button.mode[aria-pressed="true"] { background: #1f6feb; color: #fff; }
     .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; align-items: end; }
@@ -50,7 +51,7 @@
   <div class="wrap">
     <a class="back-link" href="/">← ゲームひろばへ戻る</a>
     <h1>二重・三重振り子シミュレーター</h1>
-    <details class="panel">
+    <details class="panel" id="settingsPanel">
       <summary>設定を開く（振り子の数・角度・重力など）</summary>
       <p class="mode-title">振り子の数を選ぶ</p>
       <div class="mode-buttons" role="group" aria-label="振り子の数">
@@ -69,6 +70,7 @@
         <button id="resetBtn" class="secondary">リセット</button>
         <button id="randomBtn" class="secondary">ランダム</button>
         <button id="celebrateBtn" class="celebrate-button">花吹雪をためす</button>
+        <button id="closeSettingsBtn" class="close-settings">設定を閉じて振り子を見る</button>
       </div>
       <p class="note">三重振り子では、ほんの少しの初期角度の違いが、しばらくすると大きな動きの違いになります。動きを止めてから角度を変えることもできます。</p>
     </details>
@@ -88,6 +90,8 @@
   const resetBtn = document.getElementById('resetBtn');
   const randomBtn = document.getElementById('randomBtn');
   const celebrateBtn = document.getElementById('celebrateBtn');
+  const settingsPanel = document.getElementById('settingsPanel');
+  const closeSettingsBtn = document.getElementById('closeSettingsBtn');
   const gText = document.getElementById('gText');
   const dampingText = document.getElementById('dampingText');
 
@@ -248,6 +252,10 @@
   resetBtn.addEventListener('click', resetSimulation);
   randomBtn.addEventListener('click', () => { sliders.slice(0, count).forEach(slider => slider.value = Math.round(-150 + Math.random() * 300)); updateLabels(); resetSimulation(); });
   celebrateBtn.addEventListener('click', launchConfetti);
+  closeSettingsBtn.addEventListener('click', () => {
+    settingsPanel.open = false;
+    canvas.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   sliders.forEach(slider => slider.addEventListener('input', () => { updateLabels(); resetSimulation(); }));
   [gSlider, dampingSlider].forEach(slider => slider.addEventListener('input', updateLabels));
   updateLabels(); resetSimulation(); requestAnimationFrame(animate);
