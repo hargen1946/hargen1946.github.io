@@ -33,7 +33,7 @@
   },
   {
     "title": "二重・三重振り子シミュレーター",
-    "category": "学習・科学",
+    "category": "面白物理",
     "icon": "⚛️",
     "description": "二重・三重の振り子が見せる、不思議で予測しにくい動きを観察するアプリです。",
     "path": "/double-pendulum-triple.html",
@@ -41,7 +41,7 @@
   },
   {
     "title": "振り子波シミュレーター",
-    "category": "学習・科学",
+    "category": "面白物理",
     "icon": "🌊",
     "description": "たくさんの振り子がつくる、そろった動きと波のような模様を観察するアプリです。",
     "path": "/pendulum-wave.html",

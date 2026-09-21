@@ -84,8 +84,10 @@
     }
     canvas {
       width: 100%;
+      max-width: 640px;
       height: auto;
       display: block;
+      margin: 0 auto;
       background: #fff;
       border-radius: 14px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.08);
@@ -139,8 +141,8 @@
     <div class="controls">
       <label>
         振り子の本数：
-        <span class="value" id="countText">18</span>
-        <input id="count" type="range" min="8" max="30" value="18" step="1">
+        <span class="value" id="countText">12</span>
+        <input id="count" type="range" min="6" max="18" value="12" step="1">
       </label>
 
       <label>
@@ -163,7 +165,7 @@
     </div>
   </div>
 
-  <canvas id="canvas" width="980" height="660"></canvas>
+  <canvas id="canvas" width="640" height="900"></canvas>
 
   <div class="note">
     「設定」を押すと動きは止まり、設定画面が開きます。<br>
@@ -259,11 +261,11 @@ function drawScene(t) {
 
   const time = t * speed;
   const topY = 105;
-  const minLen = 210;
-  const maxLen = 470;
+  const minLen = 280;
+  const maxLen = 610;
 
-  const left = 70;
-  const right = W - 70;
+  const left = 45;
+  const right = W - 45;
   const spacing = count > 1 ? (right - left) / (count - 1) : 0;
 
   ctx.beginPath();
