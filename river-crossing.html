@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>川渡りパズル｜ゲームひろば</title>
+  <link rel="stylesheet" href="/assets/base.css">
+  <script src="/assets/ui.js"></script>
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; color: #183044; background: linear-gradient(#dff4ff, #f7fbff 58%, #e8f3e2); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .wrap { width: min(100% - 20px, 720px); margin: 0 auto; padding: 14px 0 28px; }
+    h1 { margin: 9px 0 12px; color: #183044; font-size: 1.65rem; text-align: center; }
+    .lead, .panel { margin-bottom: 12px; padding: 14px; border-radius: 18px; background: rgba(255,255,255,.94); box-shadow: 0 5px 19px rgba(22,72,96,.13); }
+    .lead { font-size: 1rem; line-height: 1.65; }
+    .lead strong { color: #0d5877; }
+    .scene { position: relative; height: 510px; overflow: hidden; border-radius: 18px; background: linear-gradient(#aee1ff 0 34%, #4aaee1 34% 75%, #78bd59 75%); box-shadow: inset 0 -5px 0 rgba(26,101,67,.22); }
+    .cloud { position: absolute; top: 38px; width: 75px; height: 28px; border-radius: 30px; background: rgba(255,255,255,.88); }
+    .cloud::before, .cloud::after { position: absolute; border-radius: 50%; background: inherit; content: ""; }
+    .cloud::before { top: -15px; left: 13px; width: 34px; height: 34px; }
+    .cloud::after { top: -20px; right: 10px; width: 42px; height: 42px; }
+    .cloud.one { left: 8%; } .cloud.two { top: 78px; right: 9%; transform: scale(.72); }
+    .river-label { position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,.9); font-size: .95rem; font-weight: 700; letter-spacing: .13em; text-shadow: 0 1px 2px rgba(0,65,105,.5); }
+    .bank { position: absolute; bottom: 0; box-sizing: border-box; width: 38%; min-height: 246px; padding: 12px 8px; background: linear-gradient(#91d467, #5da447); }
+    .left-bank { left: 0; border-radius: 0 30px 0 0; } .right-bank { right: 0; border-radius: 30px 0 0 0; }
+    .bank h2 { margin: 0 0 9px; color: #164724; font-size: 1rem; text-align: center; }
+    .characters { display: grid; gap: 7px; }
+    .char { min-height: 38px; border: 0; border-radius: 11px; padding: 7px 4px; color: #173044; background: rgba(255,255,255,.94); box-shadow: 0 2px 6px rgba(0,0,0,.16); font: inherit; font-size: .94rem; font-weight: 700; text-align: left; }
+    button.char { cursor: pointer; } button.char:active { transform: translateY(1px); }
+    .char.selected { outline: 3px solid #ffb300; background: #fff7d2; }
+    .farmer { cursor: default; }
+    .boat-wrap { position: absolute; top: 275px; left: 38%; width: 24%; min-width: 118px; transform: translateX(-50%); text-align: center; transition: left .65s ease; }
+    .boat-wrap.right { left: 62%; } .boat-wrap.left { left: 38%; }
+    .passenger { min-height: 31px; font-size: 1.45rem; line-height: 1.25; }
+    .boat { height: 46px; border-radius: 7px 7px 42px 42px; color: white; background: linear-gradient(#a36a3c, #6c3f23); box-shadow: 0 5px 8px rgba(0,53,80,.28); display: grid; place-items: center; font-weight: 800; }
+    .cross { position: absolute; z-index: 2; bottom: 26px; left: 50%; width: 140px; transform: translateX(-50%); border: 3px solid #fff; border-radius: 999px; padding: 12px 8px; color: #183044; background: #ffd44d; box-shadow: 0 4px 0 #b18200, 0 5px 13px rgba(0,59,93,.28); font: inherit; font-size: 1.08rem; font-weight: 800; cursor: pointer; }
+    .cross:active { bottom: 23px; box-shadow: 0 1px 0 #b18200; }
+    .status { min-height: 3.2em; margin-top: 12px; border-radius: 13px; padding: 11px 12px; background: #eef6fc; color: #24495f; font-size: 1rem; font-weight: 700; line-height: 1.55; }
+    .status.warn { color: #8b351f; background: #fff0e9; } .status.win { color: #185f2e; background: #e8ffe8; }
+    .moves { margin: 10px 0 0; color: #506574; font-size: .94rem; text-align: center; }
+    .controls { display: flex; justify-content: center; gap: 10px; margin-top: 12px; }
+    .controls button { border: 0; border-radius: 12px; padding: 10px 16px; color: white; background: #506a7c; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; }
+    .controls button:first-child { background: #255f80; }
+    @media (max-width: 460px) { .wrap { width: min(100% - 14px, 720px); } h1 { font-size: 1.45rem; } .lead, .panel { padding: 11px; } .scene { height: 510px; } .bank { width: 39%; min-height: 258px; padding: 9px 5px; } .char { font-size: .82rem; } .boat-wrap.left { left: 39%; } .boat-wrap.right { left: 61%; } .boat-wrap { top: 260px; } .cross { bottom: 20px; width: 132px; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <a class="back-link" href="/">← ゲームひろばへ戻る</a>
+    <h1>川渡りパズル</h1>
+    <section class="lead">
+      <strong>目的：</strong>農夫・狼・羊・キャベツを、全員右岸へ運びましょう。<br>
+      船に乗れるのは農夫と、もう1つだけです。農夫がいない岸では、<strong>狼と羊</strong>、または<strong>羊とキャベツ</strong>を一緒にしてはいけません。
+    </section>
+    <section class="panel" aria-label="川渡りパズルの画面">
+      <div class="scene">
+        <div class="cloud one"></div><div class="cloud two"></div>
+        <div class="river-label">川</div>
+        <section class="bank left-bank"><h2>左岸</h2><div id="left" class="characters"></div></section>
+        <section class="bank right-bank"><h2>右岸</h2><div id="right" class="characters"></div></section>
+        <div id="boatWrap" class="boat-wrap left"><div id="passenger" class="passenger">👨‍🌾</div><div class="boat">🚣 船</div></div>
+        <button id="crossBtn" class="cross" type="button">🚣 渡る</button>
+      </div>
+      <div id="status" class="status" role="status">農夫と一緒に船へ乗せるものを1つ選び、「渡る」を押してください。農夫だけでも渡れます。</div>
+      <p id="moves" class="moves">移動回数：0回</p>
+      <div class="controls"><button id="resetBtn" type="button">最初から</button><button id="hintBtn" type="button">ヒント</button></div>
+    </section>
+  </main>
+  <script>
+    const labels = { wolf: "🐺 狼", sheep: "🐑 羊", cabbage: "🥬 キャベツ" };
+    const left = document.getElementById("left"), right = document.getElementById("right");
+    const boatWrap = document.getElementById("boatWrap"), passenger = document.getElementById("passenger");
+    const status = document.getElementById("status"), movesText = document.getElementById("moves");
+    let side, selected, moves, hintIndex;
+
+    function reset(message = "農夫と一緒に船へ乗せるものを1つ選び、「渡る」を押してください。農夫だけでも渡れます。") {
+      side = { farmer: "L", wolf: "L", sheep: "L", cabbage: "L" };
+      selected = null; moves = 0; hintIndex = 0; setStatus(message); render();
+    }
+    function setStatus(text, kind = "") { status.textContent = text; status.className = "status " + kind; }
+    function unsafe() {
+      for (const bank of ["L", "R"]) {
+        if (side.farmer === bank) continue;
+        if (side.wolf === bank && side.sheep === bank) return "狼と羊を一緒に残せません。";
+        if (side.sheep === bank && side.cabbage === bank) return "羊とキャベツを一緒に残せません。";
+      }
+      return null;
+    }
+    function won() { return ["farmer", "wolf", "sheep", "cabbage"].every(key => side[key] === "R"); }
+    function addCharacter(key, parent) {
+      const item = document.createElement(key === "farmer" ? "div" : "button");
+      item.className = "char" + (key === "farmer" ? " farmer" : "") + (selected === key ? " selected" : "");
+      item.textContent = key === "farmer" ? "👨‍🌾 農夫" : labels[key];
+      if (key !== "farmer") {
+        item.type = "button";
+        item.onclick = () => {
+          if (side[key] !== side.farmer) { setStatus("農夫と同じ岸にいるものだけ、船に乗せられます。", "warn"); return; }
+          selected = selected === key ? null : key;
+          setStatus(selected ? labels[selected] + " を船に乗せます。「渡る」を押してください。" : "農夫だけで渡ります。「渡る」を押してください。");
+          render();
+        };
+      }
+      parent.appendChild(item);
+    }
+    function render() {
+      left.innerHTML = ""; right.innerHTML = "";
+      for (const bank of ["L", "R"]) {
+        const parent = bank === "L" ? left : right;
+        if (side.farmer === bank) addCharacter("farmer", parent);
+        for (const key of ["wolf", "sheep", "cabbage"]) if (side[key] === bank) addCharacter(key, parent);
+      }
+      boatWrap.className = "boat-wrap " + (side.farmer === "L" ? "left" : "right");
+      passenger.textContent = selected ? "👨‍🌾 " + labels[selected].split(" ")[0] : "👨‍🌾";
+      movesText.textContent = "移動回数：" + moves + "回";
+    }
+    document.getElementById("crossBtn").onclick = () => {
+      const before = { ...side };
+      const destination = side.farmer === "L" ? "R" : "L";
+      side.farmer = destination; if (selected) side[selected] = destination;
+      const problem = unsafe();
+      if (problem) { side = before; selected = null; setStatus("その渡り方ではだめです。" + problem, "warn"); render(); return; }
+      moves++; selected = null;
+      setStatus(won() ? "🎉 クリア！ " + moves + "回で全員を右岸へ運べました。" : moves + "回目の移動です。次に船へ乗せるものを選んでください。", won() ? "win" : "");
+      render();
+    };
+    document.getElementById("resetBtn").onclick = () => reset();
+    document.getElementById("hintBtn").onclick = () => {
+      const hints = ["最初は羊を右岸へ運ぶのがポイントです。", "狼またはキャベツを運んだあと、農夫は羊を連れて戻る必要があります。", "最後にもう一度、羊を右岸へ運びましょう。"];
+      setStatus("ヒント：" + hints[hintIndex++ % hints.length]);
+    };
+    reset();
+  </script>
+</body>
+</html>
