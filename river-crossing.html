@@ -21,7 +21,7 @@
     .cloud::after { top: -20px; right: 10px; width: 42px; height: 42px; }
     .cloud.one { left: 8%; } .cloud.two { top: 78px; right: 9%; transform: scale(.72); }
     .river-label { position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,.9); font-size: .95rem; font-weight: 700; letter-spacing: .13em; text-shadow: 0 1px 2px rgba(0,65,105,.5); }
-    .bank { position: absolute; bottom: 0; box-sizing: border-box; width: 38%; min-height: 246px; padding: 12px 8px; background: linear-gradient(#91d467, #5da447); }
+    .bank { position: absolute; bottom: 0; box-sizing: border-box; width: 32%; min-height: 246px; padding: 12px 8px; background: linear-gradient(#91d467, #5da447); }
     .left-bank { left: 0; border-radius: 0 30px 0 0; } .right-bank { right: 0; border-radius: 30px 0 0 0; }
     .bank h2 { margin: 0 0 9px; color: #164724; font-size: 1rem; text-align: center; }
     .characters { display: grid; gap: 7px; }
@@ -29,19 +29,22 @@
     button.char { cursor: pointer; } button.char:active { transform: translateY(1px); }
     .char.selected { outline: 3px solid #ffb300; background: #fff7d2; }
     .farmer { cursor: default; }
-    .boat-wrap { position: absolute; top: 275px; left: 38%; width: 24%; min-width: 118px; transform: translateX(-50%); text-align: center; transition: left .65s ease; }
-    .boat-wrap.right { left: 62%; } .boat-wrap.left { left: 38%; }
+    .boat-wrap { position: absolute; top: 275px; left: 40%; width: 88px; transform: translateX(-50%); text-align: center; transition: left .65s ease; }
+    .boat-wrap.right { left: 60%; } .boat-wrap.left { left: 40%; }
     .passenger { min-height: 31px; font-size: 1.45rem; line-height: 1.25; }
     .boat { height: 46px; border-radius: 7px 7px 42px 42px; color: white; background: linear-gradient(#a36a3c, #6c3f23); box-shadow: 0 5px 8px rgba(0,53,80,.28); display: grid; place-items: center; font-weight: 800; }
-    .cross { position: absolute; z-index: 2; bottom: 26px; left: 50%; width: 140px; transform: translateX(-50%); border: 3px solid #fff; border-radius: 999px; padding: 12px 8px; color: #183044; background: #ffd44d; box-shadow: 0 4px 0 #b18200, 0 5px 13px rgba(0,59,93,.28); font: inherit; font-size: 1.08rem; font-weight: 800; cursor: pointer; }
-    .cross:active { bottom: 23px; box-shadow: 0 1px 0 #b18200; }
+    .cross { position: absolute; z-index: 2; bottom: 10px; left: 50%; width: 132px; transform: translateX(-50%); border: 3px solid #fff; border-radius: 999px; padding: 10px 8px; color: #183044; background: #ffd44d; box-shadow: 0 4px 0 #b18200, 0 5px 13px rgba(0,59,93,.28); font: inherit; font-size: 1.08rem; font-weight: 800; cursor: pointer; }
+    .cross:active { bottom: 7px; box-shadow: 0 1px 0 #b18200; }
     .status { min-height: 3.2em; margin-top: 12px; border-radius: 13px; padding: 11px 12px; background: #eef6fc; color: #24495f; font-size: 1rem; font-weight: 700; line-height: 1.55; }
     .status.warn { color: #8b351f; background: #fff0e9; } .status.win { color: #185f2e; background: #e8ffe8; }
     .moves { margin: 10px 0 0; color: #506574; font-size: .94rem; text-align: center; }
     .controls { display: flex; justify-content: center; gap: 10px; margin-top: 12px; }
     .controls button { border: 0; border-radius: 12px; padding: 10px 16px; color: white; background: #506a7c; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; }
     .controls button:first-child { background: #255f80; }
-    @media (max-width: 460px) { .wrap { width: min(100% - 14px, 720px); } h1 { font-size: 1.45rem; } .lead, .panel { padding: 11px; } .scene { height: 510px; } .bank { width: 39%; min-height: 258px; padding: 9px 5px; } .char { font-size: .82rem; } .boat-wrap.left { left: 39%; } .boat-wrap.right { left: 61%; } .boat-wrap { top: 260px; } .cross { bottom: 20px; width: 132px; } }
+    #confetti { pointer-events: none; position: fixed; z-index: 99; inset: 0; overflow: hidden; }
+    .confetti-piece { position: absolute; top: -20px; width: 10px; height: 16px; border-radius: 2px; animation: fall 1.9s linear forwards; }
+    @keyframes fall { to { transform: translate(var(--drift), 108vh) rotate(720deg); opacity: .1; } }
+    @media (max-width: 460px) { .wrap { width: min(100% - 14px, 720px); } h1 { font-size: 1.45rem; } .lead, .panel { padding: 11px; } .scene { height: 510px; } .bank { width: 33%; min-height: 258px; padding: 9px 5px; } .char { font-size: .82rem; } .boat-wrap.left { left: 42%; } .boat-wrap.right { left: 58%; } .boat-wrap { top: 275px; width: 76px; } .cross { bottom: 7px; width: 128px; } }
   </style>
 </head>
 <body>
@@ -66,6 +69,7 @@
       <div class="controls"><button id="resetBtn" type="button">最初から</button><button id="hintBtn" type="button">ヒント</button></div>
     </section>
   </main>
+  <div id="confetti" aria-hidden="true"></div>
   <script>
     const labels = { wolf: "🐺 狼", sheep: "🐑 羊", cabbage: "🥬 キャベツ" };
     const left = document.getElementById("left"), right = document.getElementById("right");
@@ -87,6 +91,26 @@
       return null;
     }
     function won() { return ["farmer", "wolf", "sheep", "cabbage"].every(key => side[key] === "R"); }
+    function celebrate() {
+      if (!window.GH || GH.soundEnabled()) {
+        try {
+          const audio = new (window.AudioContext || window.webkitAudioContext)();
+          [523, 659, 784].forEach((frequency, index) => {
+            const oscillator = audio.createOscillator(), gain = audio.createGain();
+            oscillator.frequency.value = frequency; gain.gain.setValueAtTime(.08, audio.currentTime + index * .12);
+            gain.gain.exponentialRampToValueAtTime(.001, audio.currentTime + index * .12 + .34);
+            oscillator.connect(gain).connect(audio.destination); oscillator.start(audio.currentTime + index * .12); oscillator.stop(audio.currentTime + index * .12 + .35);
+          });
+        } catch (_) { /* 音が使えない機器では、花吹雪だけ表示します */ }
+      }
+      const box = document.getElementById("confetti"), colors = ["#f64d6a", "#ffd44d", "#42b883", "#4aaee1", "#a763df"];
+      for (let i = 0; i < 52; i++) {
+        const piece = document.createElement("i"); piece.className = "confetti-piece";
+        piece.style.left = Math.random() * 100 + "%"; piece.style.background = colors[i % colors.length];
+        piece.style.setProperty("--drift", (Math.random() * 180 - 90) + "px"); piece.style.animationDelay = Math.random() * .3 + "s"; box.appendChild(piece);
+      }
+      setTimeout(() => { box.innerHTML = ""; }, 2400);
+    }
     function addCharacter(key, parent) {
       const item = document.createElement(key === "farmer" ? "div" : "button");
       item.className = "char" + (key === "farmer" ? " farmer" : "") + (selected === key ? " selected" : "");
@@ -120,8 +144,10 @@
       const problem = unsafe();
       if (problem) { side = before; selected = null; setStatus("その渡り方ではだめです。" + problem, "warn"); render(); return; }
       moves++; selected = null;
-      setStatus(won() ? "🎉 クリア！ " + moves + "回で全員を右岸へ運べました。" : moves + "回目の移動です。次に船へ乗せるものを選んでください。", won() ? "win" : "");
+      const finished = won();
+      setStatus(finished ? "🎉 クリア！ " + moves + "回で全員を右岸へ運べました。" : moves + "回目の移動です。次に船へ乗せるものを選んでください。", finished ? "win" : "");
       render();
+      if (finished) celebrate();
     };
     document.getElementById("resetBtn").onclick = () => reset();
     document.getElementById("hintBtn").onclick = () => {
