@@ -264,19 +264,20 @@ function drawScene(t) {
   const minLen = 280;
   const maxLen = 610;
 
-  const left = 45;
-  const right = W - 45;
-  const spacing = count > 1 ? (right - left) / (count - 1) : 0;
+  // 横から見た振り子波です。全ての支点を重ねるため、
+  // 静止中は長さの異なる振り子が縦一列に見えます。
+  const pivotX = W / 2;
+  const supportHalfWidth = 105;
 
   ctx.beginPath();
-  ctx.moveTo(left - 26, topY);
-  ctx.lineTo(right + 26, topY);
+  ctx.moveTo(pivotX - supportHalfWidth, topY);
+  ctx.lineTo(pivotX + supportHalfWidth, topY);
   ctx.strokeStyle = "#222";
   ctx.lineWidth = 5;
   ctx.stroke();
 
   for (let i = 0; i < count; i++) {
-    const x0 = left + i * spacing;
+    const x0 = pivotX;
     const ratio = i / Math.max(1, count - 1);
     const len = minLen + (maxLen - minLen) * ratio;
 
