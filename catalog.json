@@ -4,7 +4,7 @@
     "category": "パズル",
     "icon": "🧩",
     "description": "数字を順番に並べ替えて完成させるパズルです。9枚と15枚から選べます。",
-    "path": "/slide-puzzle/",
+    "path": "/slide-puzzle",
     "tags": ["数字", "頭の体操"]
   },
   {
@@ -12,7 +12,9 @@
     "category": "パズル",
     "icon": "🗼",
     "description": "すべての円盤を右端の棒へ移しかえる、じっくり考えるパズルです。",
-    "path": "/hanoi.html",
+    "path": "/hanoi",
+
+  
     "tags": ["3〜7枚", "じっくり"]
   },
   {
@@ -20,7 +22,7 @@
     "category": "ゲーム",
     "icon": "🛸",
     "description": "ゆっくり遊べる一画面の撃ち落としゲーム。UFOを全部倒しましょう。",
-    "path": "/ufo-attack.html",
+    "path": "/ufo-attack",
     "tags": ["アクション", "一画面"]
   },
   {
@@ -28,7 +30,7 @@
     "category": "ゲーム",
     "icon": "👾",
     "description": "左右のキーで自機を動かし、インベーダーを撃ち落とすゲームです。",
-    "path": "/invaders.html",
+    "path": "/invaders",
     "tags": ["アクション", "キーボード"]
   },
   {
@@ -36,7 +38,7 @@
     "category": "面白物理",
     "icon": "⚛️",
     "description": "二重・三重の振り子が見せる、不思議で予測しにくい動きを観察するアプリです。",
-    "path": "/double-pendulum-triple.html",
+    "path": "/double-pendulum-triple",
     "tags": ["物理", "振り子", "カオス", "三重振り子"]
   },
   {
@@ -44,7 +46,7 @@
     "category": "面白物理",
     "icon": "🌊",
     "description": "たくさんの振り子がつくる、そろった動きと波のような模様を観察するアプリです。",
-    "path": "/pendulum-wave.html",
+    "path": "/pendulum-wave",
     "tags": ["物理", "振り子", "波", "観察"]
   },
   {
@@ -52,7 +54,7 @@
     "category": "パズル",
     "icon": "🚣",
     "description": "農夫・狼・羊・キャベツを、ルールを守りながら向こう岸へ運ぶ順番パズルです。",
-    "path": "/river-crossing.html",
+    "path": "/river-crossing",
     "tags": ["考える", "順番", "川渡り"]
   },
  {
@@ -60,7 +62,7 @@
   "category": "面白物理",
   "icon": "🃏",
   "description": "簡単な数式が興味深い動きをします。",
-  "path": "/lorenz-attractor.html",
+  "path": "/lorenz-attractor",
   "tags": ["物理", "数式"]
 } 
 ]
