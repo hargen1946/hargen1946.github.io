@@ -54,5 +54,13 @@
     "description": "農夫・狼・羊・キャベツを、ルールを守りながら向こう岸へ運ぶ順番パズルです。",
     "path": "/river-crossing.html",
     "tags": ["考える", "順番", "川渡り"]
-  }
+  },
+ {
+  "title": "ローレンツ・アトラクター実験",
+  "category": "面白物理",
+  "icon": "🃏",
+  "description": "簡単な数式が興味深い動きをします。",
+  "path": "/lorenz-attractor.html/",
+  "tags": ["物理", "数式"]
+} 
 ]
