@@ -60,7 +60,7 @@
   "category": "面白物理",
   "icon": "🃏",
   "description": "簡単な数式が興味深い動きをします。",
-  "path": "/lorenz-attractor.html/",
+  "path": "/lorenz-attractor.html",
   "tags": ["物理", "数式"]
 } 
 ]
