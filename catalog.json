@@ -38,7 +38,7 @@
     "category": "面白物理",
     "icon": "⚛️",
     "description": "二重・三重の振り子が見せる、不思議で予測しにくい動きを観察するアプリです。",
-    "path": "/double-pendulum-triple",
+    "path": "/double-pendulum/double-pendulum-triple.html",
     "tags": ["物理", "振り子", "カオス", "三重振り子"]
   },
   {
