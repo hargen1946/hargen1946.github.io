@@ -35,7 +35,7 @@
     .boat { height: 46px; border-radius: 7px 7px 42px 42px; color: white; background: linear-gradient(#a36a3c, #6c3f23); box-shadow: 0 5px 8px rgba(0,53,80,.28); display: grid; place-items: center; font-weight: 800; }
     .cross { position: absolute; z-index: 2; bottom: 10px; left: 50%; width: 132px; transform: translateX(-50%); border: 3px solid #fff; border-radius: 999px; padding: 10px 8px; color: #183044; background: #ffd44d; box-shadow: 0 4px 0 #b18200, 0 5px 13px rgba(0,59,93,.28); font: inherit; font-size: 1.08rem; font-weight: 800; cursor: pointer; }
     .cross:active { bottom: 7px; box-shadow: 0 1px 0 #b18200; }
-    .status { min-height: 3.2em; margin-top: 12px; border-radius: 13px; padding: 11px 12px; background: #eef6fc; color: #24495f; font-size: 1rem; font-weight: 700; line-height: 1.55; }
+    .status { position: absolute; z-index: 1; top: 105px; left: 50%; width: calc(100% - 28px); max-width: 570px; transform: translateX(-50%); border-radius: 13px; padding: 9px 11px; background: rgba(238,246,252,.95); color: #24495f; font-size: .92rem; font-weight: 700; line-height: 1.4; text-align: center; box-shadow: 0 2px 8px rgba(22,72,96,.16); }
     .status.warn { color: #8b351f; background: #fff0e9; } .status.win { color: #185f2e; background: #e8ffe8; }
     .moves { margin: 10px 0 0; color: #506574; font-size: .94rem; text-align: center; }
     .controls { display: flex; justify-content: center; gap: 10px; margin-top: 12px; }
@@ -44,7 +44,7 @@
     #confetti { pointer-events: none; position: fixed; z-index: 99; inset: 0; overflow: hidden; }
     .confetti-piece { position: absolute; top: -20px; width: 10px; height: 16px; border-radius: 2px; animation: fall 1.9s linear forwards; }
     @keyframes fall { to { transform: translate(var(--drift), 108vh) rotate(720deg); opacity: .1; } }
-    @media (max-width: 460px) { .wrap { width: min(100% - 14px, 720px); } h1 { font-size: 1.45rem; } .lead, .panel { padding: 11px; } .scene { height: 510px; } .bank { width: 33%; min-height: 258px; padding: 9px 5px; } .char { font-size: .82rem; } .boat-wrap.left { left: 42%; } .boat-wrap.right { left: 58%; } .boat-wrap { top: 275px; width: 76px; } .cross { bottom: 7px; width: 128px; } }
+    @media (max-width: 460px) { .wrap { width: min(100% - 14px, 720px); } h1 { font-size: 1.45rem; } .lead, .panel { padding: 11px; } .scene { height: 510px; } .status { top: 100px; width: calc(100% - 18px); padding: 7px 9px; font-size: .84rem; } .bank { width: 33%; min-height: 258px; padding: 9px 5px; } .char { font-size: .82rem; } .boat-wrap.left { left: 42%; } .boat-wrap.right { left: 58%; } .boat-wrap { top: 275px; width: 76px; } .cross { bottom: 7px; width: 128px; } }
   </style>
 </head>
 <body>
@@ -53,18 +53,18 @@
     <h1>川渡りパズル</h1>
     <section class="lead">
       <strong>目的：</strong>農夫・狼・羊・キャベツを、全員右岸へ運びましょう。<br>
-      船に乗れるのは農夫と、もう1つだけです。農夫がいない岸では、<strong>狼と羊</strong>、または<strong>羊とキャベツ</strong>を一緒にしてはいけません。
+      船に乗れるのは農夫と、もう1つだけです。農夫がいない岸では、<strong>狼と羊</strong>、または<strong>羊とキャベツ</strong>を一緒にしてはいけません。一緒にいると食べられますから。
     </section>
     <section class="panel" aria-label="川渡りパズルの画面">
       <div class="scene">
         <div class="cloud one"></div><div class="cloud two"></div>
+        <div id="status" class="status" role="status">農夫と一緒に船へ乗せるものを1つ選び、「渡る」を押してください。農夫だけでも渡れます。</div>
         <div class="river-label">川</div>
         <section class="bank left-bank"><h2>左岸</h2><div id="left" class="characters"></div></section>
         <section class="bank right-bank"><h2>右岸</h2><div id="right" class="characters"></div></section>
         <div id="boatWrap" class="boat-wrap left"><div id="passenger" class="passenger">👨‍🌾</div><div class="boat">🚣 船</div></div>
         <button id="crossBtn" class="cross" type="button">🚣 渡る</button>
       </div>
-      <div id="status" class="status" role="status">農夫と一緒に船へ乗せるものを1つ選び、「渡る」を押してください。農夫だけでも渡れます。</div>
       <p id="moves" class="moves">移動回数：0回</p>
       <div class="controls"><button id="resetBtn" type="button">最初から</button><button id="hintBtn" type="button">ヒント</button></div>
     </section>
