@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>二重・三重振り子シミュレーター</title>
+  <title>振り子シミュレーター</title>
   <link rel="stylesheet" href="/assets/base.css">
   <script src="/assets/ui.js"></script>
   <style>
@@ -15,12 +15,15 @@
     h1 { font-size: clamp(23px, 5vw, 30px); margin: 0 0 12px; }
     .panel, canvas { background: #fff; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
     .panel { padding: 14px; margin-bottom: 14px; }
-    .panel summary { color: #1f2937; font-size: 1.05rem; font-weight: 800; cursor: pointer; }
+    .panel summary { display: flex; align-items: center; gap: 8px; list-style: none; cursor: pointer; }
+    .panel summary::-webkit-details-marker { display: none; }
+    .settings-trigger { display: inline-block; flex: none; padding: 11px 18px; border-radius: 10px; background: #0f7a54; color: #fff; font-size: 1.1rem; font-weight: 800; }
+    .panel summary:hover .settings-trigger, .panel summary:focus-visible .settings-trigger { background: #095f40; }
+    .settings-description { color: #374151; font-size: .88rem; font-weight: 600; }
     .panel[open] summary { margin-bottom: 1rem; }
     .mode-title { margin: 0 0 7px; font-size: 15px; font-weight: 700; }
     .mode-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
     button { border: 0; border-radius: 10px; padding: 10px 14px; font-size: 16px; cursor: pointer; background: #253047; color: #fff; margin-top: 6px; }
-    button.secondary { background: #64748b; }
     button.close-settings { background: #0f7a54; }
     button.mode { background: #e7ecf3; color: #243042; margin-top: 0; }
     button.mode[aria-pressed="true"] { background: #1f6feb; color: #fff; }
@@ -30,29 +33,15 @@
     .value { font-weight: 700; }
     .note { font-size: 14px; color: #4b5563; line-height: 1.65; margin: 12px 0 0; }
     canvas { width: 100%; height: auto; display: block; }
-    .celebrate-button { background: #c64d71; }
-    .confetti {
-      position: fixed;
-      top: -2rem;
-      z-index: 50;
-      width: 0.65rem;
-      height: 1rem;
-      border-radius: 0.15rem;
-      pointer-events: none;
-      animation: confetti-fall 2.8s linear forwards;
-    }
-    @keyframes confetti-fall {
-      to { transform: translate3d(var(--drift), 110vh, 0) rotate(720deg); opacity: 0; }
-    }
     [hidden] { display: none !important; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <a class="back-link" href="/">← ゲームひろばへ戻る</a>
-    <h1>二重・三重振り子シミュレーター</h1>
+    <h1>振り子シミュレーター</h1>
     <details class="panel" id="settingsPanel">
-      <summary>設定を開く（振り子の数・角度・重力など）</summary>
+      <summary><span class="settings-trigger">設定を開く</span><span class="settings-description">本数・角度・重力を変更</span></summary>
       <p class="mode-title">振り子の数を選ぶ</p>
       <div class="mode-buttons" role="group" aria-label="振り子の数">
         <button class="mode" id="mode2" aria-pressed="true">二重振り子</button>
@@ -66,13 +55,9 @@
         <label>摩擦の強さ： <span class="value" id="dampingText">0.000</span><input id="damping" type="range" min="0" max="1" value="0" step="0.005"></label>
       </div>
       <div>
-        <button id="startBtn">一時停止</button>
-        <button id="resetBtn" class="secondary">リセット</button>
-        <button id="randomBtn" class="secondary">ランダム</button>
-        <button id="celebrateBtn" class="celebrate-button">花吹雪をためす</button>
         <button id="closeSettingsBtn" class="close-settings">設定を閉じて振り子を見る</button>
       </div>
-      <p class="note">三重振り子では、ほんの少しの初期角度の違いが、しばらくすると大きな動きの違いになります。動きを止めてから角度を変えることもできます。</p>
+      <p class="note">三重振り子では、ほんの少しの初期角度の違いが、しばらくすると大きな動きの違いになります。角度を変えると新しい動きが始まります。</p>
     </details>
     <canvas id="canvas" width="900" height="650" aria-label="振り子の動き"></canvas>
   </div>
@@ -86,10 +71,6 @@
   const mode2 = document.getElementById('mode2');
   const mode3 = document.getElementById('mode3');
   const a3Row = document.getElementById('a3Row');
-  const startBtn = document.getElementById('startBtn');
-  const resetBtn = document.getElementById('resetBtn');
-  const randomBtn = document.getElementById('randomBtn');
-  const celebrateBtn = document.getElementById('celebrateBtn');
   const settingsPanel = document.getElementById('settingsPanel');
   const closeSettingsBtn = document.getElementById('closeSettingsBtn');
   const gText = document.getElementById('gText');
@@ -232,26 +213,8 @@
     requestAnimationFrame(animate);
   }
 
-  function launchConfetti() {
-    const colors = ['#e85d75', '#f4b942', '#4db6ac', '#6c8df0', '#c67adf'];
-    for (let i = 0; i < 56; i++) {
-      const piece = document.createElement('div');
-      piece.className = 'confetti';
-      piece.style.left = `${Math.random() * 100}vw`;
-      piece.style.background = colors[i % colors.length];
-      piece.style.setProperty('--drift', `${-130 + Math.random() * 260}px`);
-      piece.style.animationDelay = `${Math.random() * 0.45}s`;
-      document.body.appendChild(piece);
-      piece.addEventListener('animationend', () => piece.remove());
-    }
-  }
-
   mode2.addEventListener('click', () => setCount(2));
   mode3.addEventListener('click', () => setCount(3));
-  startBtn.addEventListener('click', () => { running = !running; startBtn.textContent = running ? '一時停止' : '開始'; });
-  resetBtn.addEventListener('click', resetSimulation);
-  randomBtn.addEventListener('click', () => { sliders.slice(0, count).forEach(slider => slider.value = Math.round(-150 + Math.random() * 300)); updateLabels(); resetSimulation(); });
-  celebrateBtn.addEventListener('click', launchConfetti);
   closeSettingsBtn.addEventListener('click', () => {
     settingsPanel.open = false;
     canvas.scrollIntoView({ behavior: 'smooth', block: 'start' });
