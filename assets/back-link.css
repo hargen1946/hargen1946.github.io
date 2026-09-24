@@ -1,0 +1,32 @@
+/* 作品ページ共通の「ゲームひろばへ戻る」ボタン */
+a.back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 46px;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border: 2px solid #146c48;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #146c48;
+  font-family: "Yu Gothic UI", "YuGothic", "Hiragino Sans", "Noto Sans JP", "Meiryo", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .08);
+}
+
+a.back-link:hover,
+a.back-link:focus-visible {
+  background: #e7f4ed;
+  color: #095c3d;
+}
+
+a.back-link:focus-visible {
+  outline: 3px solid #8a4b08;
+  outline-offset: 2px;
+}
