@@ -122,7 +122,7 @@ if (isMobile && installButton) {
     });
   }
 
-  fetch("/catalog.json")
+  fetch("/catalog.json?v=3")
     .then(function (response) {
       if (!response.ok) { throw new Error("一覧を読み込めませんでした"); }
       return response.json();
