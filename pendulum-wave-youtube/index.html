@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="/assets/back-link.css?v=1">
   <script src="/assets/ui.js"></script>
 
-  <style>
+<style>
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -23,11 +23,12 @@
       padding: 10px 16px 18px;
     }
 
-    h1 {
-      margin: 4px 0 8px;
-      font-size: 1.45rem;
-      line-height: 1.3;
-    }
+   h1 {
+  margin: 8px 0 14px;
+  font-size: 2rem;
+  line-height: 1.3;
+  text-align: center;
+}
 
     .topbar {
       background: #fff;
@@ -45,7 +46,7 @@
     }
 
     .desc {
-      font-size: 0.9rem;
+      font-size: 1.2rem;
       color: #444;
       line-height: 1.4;
       flex: 1;
@@ -81,16 +82,19 @@
       gap: 10px 18px;
     }
 
-    label {
-      display: block;
-      font-size: 0.88rem;
-      line-height: 1.35;
-    }
-
-    input[type="range"] {
-      width: 100%;
-      margin-top: 4px;
-    }
+  label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.3rem;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+  input[type="range"] {
+  flex: 1;
+  width: auto;
+  margin: 0 0 0 10px;
+}  
 
     .value {
       font-weight: 700;
@@ -142,7 +146,7 @@
       }
 
       button {
-        font-size: 0.9rem;
+        font-size: 1.2em;
         padding: 8px 12px;
       }
     }
@@ -153,8 +157,7 @@
 
 <div class="wrap">
 
-  <a class="back-link" href="/">← ゲームひろばへ戻る</a>
-
+ 
   <h1>振り子ウェーブシミュレーター</h1>
 
   <div class="topbar">
@@ -328,8 +331,8 @@ function drawScene(t) {
 
   /* YouTube横長画面用 */
   const topY = 90;
-  const minLen = 300;
-  const maxLen = 600;
+  const minLen = 260;
+  const maxLen = 540;
 
   const pivotX = W / 2;
   const supportHalfWidth = 150;
@@ -419,37 +422,7 @@ function drawScene(t) {
     ctx.fill();
   }
 
-  ctx.fillStyle =
-    "rgba(0,0,0,0.68)";
-
-  ctx.font =
-    "20px system-ui, sans-serif";
-
-  if (!running && simElapsed === 0) {
-
-    ctx.fillText(
-      "静止画面です。設定して「閉じる」で最初から動きます",
-      25,
-      35
-    );
-
-  } else if (!running && settingsOpen) {
-
-    ctx.fillText(
-      "設定中です。「閉じる」で最初から再生します",
-      25,
-      35
-    );
-
-  } else {
-
-    ctx.fillText(
-      "最初にそろって、少しずつ模様が崩れていきます",
-      25,
-      35
-    );
-
-  }
+ 
 }
 
 function animate(now) {
