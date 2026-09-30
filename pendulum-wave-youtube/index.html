@@ -1,0 +1,518 @@
+```html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>振り子ウェーブシミュレーター｜ゲームひろば</title>
+  <link rel="stylesheet" href="/assets/base.css">
+  <link rel="stylesheet" href="/assets/back-link.css?v=1">
+  <script src="/assets/ui.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f6f8;
+      color: #222;
+    }
+
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 10px 16px 18px;
+    }
+
+    h1 {
+      margin: 4px 0 8px;
+      font-size: 1.45rem;
+      line-height: 1.3;
+    }
+
+    .topbar {
+      background: #fff;
+      border-radius: 12px;
+      padding: 8px 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      margin-bottom: 8px;
+    }
+
+    .toprow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .desc {
+      font-size: 0.9rem;
+      color: #444;
+      line-height: 1.4;
+      flex: 1;
+    }
+
+    button {
+      border: 0;
+      border-radius: 9px;
+      padding: 8px 18px;
+      font-size: 1rem;
+      cursor: pointer;
+      background: #222;
+      color: white;
+      white-space: nowrap;
+    }
+
+    .panel {
+      background: #fff;
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      margin-bottom: 8px;
+      display: none;
+    }
+
+    .panel.open {
+      display: block;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.88rem;
+      line-height: 1.35;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .value {
+      font-weight: 700;
+    }
+
+    .canvas-wrap {
+      width: 100%;
+      max-width: 1280px;
+      aspect-ratio: 16 / 9;
+      margin: 0 auto;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    .note {
+      margin-top: 8px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 8px 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: #555;
+    }
+
+    @media (max-width: 760px) {
+      .wrap {
+        padding: 8px;
+      }
+
+      h1 {
+        font-size: 1.2rem;
+      }
+
+      .toprow {
+        align-items: stretch;
+        flex-wrap: wrap;
+      }
+
+      .controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      button {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+  <a class="back-link" href="/">← ゲームひろばへ戻る</a>
+
+  <h1>振り子ウェーブシミュレーター</h1>
+
+  <div class="topbar">
+    <div class="toprow">
+
+      <div class="desc" id="statusText">
+        長さの異なる多数の振り子を横から見たものです。
+        最初は静止しています。
+        <strong>設定</strong>を押して調整し、
+        <strong>閉じる</strong>を押すと最初から動きます。
+      </div>
+
+      <button id="toggleBtn">設定</button>
+
+    </div>
+  </div>
+
+  <div class="panel" id="settingsPanel">
+
+    <div class="controls">
+
+      <label>
+        振り子の本数：
+        <span class="value" id="countText">15</span>
+        <input id="count" type="range"
+               min="6" max="20" value="15" step="1">
+      </label>
+
+      <label>
+        動きの速さ：
+        <span class="value" id="speedText">1.00</span>
+        <input id="speed" type="range"
+               min="0.25" max="2.00" value="1.00" step="0.05">
+      </label>
+
+      <label>
+        振れ幅：
+        <span class="value" id="ampText">55°</span>
+        <input id="amp" type="range"
+               min="10" max="70" value="55" step="1">
+      </label>
+
+      <label>
+        残像：
+        <span class="value" id="trailText">なし</span>
+        <input id="trail" type="range"
+               min="0" max="1" value="0" step="1">
+      </label>
+
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="canvas" width="1280" height="720"></canvas>
+  </div>
+
+  
+
+</div>
+
+<script>
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const panel = document.getElementById("settingsPanel");
+const toggleBtn = document.getElementById("toggleBtn");
+const statusText = document.getElementById("statusText");
+
+const countSlider = document.getElementById("count");
+const speedSlider = document.getElementById("speed");
+const ampSlider = document.getElementById("amp");
+const trailSlider = document.getElementById("trail");
+
+const countText = document.getElementById("countText");
+const speedText = document.getElementById("speedText");
+const ampText = document.getElementById("ampText");
+const trailText = document.getElementById("trailText");
+
+let settingsOpen = false;
+let running = false;
+let simElapsed = 0;
+let lastFrame = performance.now();
+let prevTrailState = null;
+
+function updateLabels() {
+  countText.textContent = countSlider.value;
+  speedText.textContent =
+    Number(speedSlider.value).toFixed(2);
+  ampText.textContent =
+    `${ampSlider.value}°`;
+  trailText.textContent =
+    trailSlider.value === "1" ? "あり" : "なし";
+}
+
+function clearCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function restartAndRun() {
+  simElapsed = 0;
+  running = true;
+  clearCanvas();
+  prevTrailState = null;
+
+  statusText.innerHTML =
+    '再生中です。もう一度<strong>設定</strong>を押すと止めて設定できます。';
+}
+
+function stopForSettings() {
+  running = false;
+
+  statusText.innerHTML =
+    '設定を変えたら<strong>閉じる</strong>を押してください。最初から動きます。';
+}
+
+function openSettings() {
+  settingsOpen = true;
+  panel.classList.add("open");
+  toggleBtn.textContent = "閉じる";
+  stopForSettings();
+}
+
+function closeSettingsAndStart() {
+  settingsOpen = false;
+  panel.classList.remove("open");
+  toggleBtn.textContent = "設定";
+  restartAndRun();
+}
+
+function drawScene(t) {
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const trailsOn =
+    trailSlider.value === "1";
+
+  if (
+    prevTrailState === null ||
+    prevTrailState !== trailsOn
+  ) {
+    clearCanvas();
+    prevTrailState = trailsOn;
+  }
+
+  if (trailsOn && running) {
+
+    ctx.fillStyle =
+      "rgba(255,255,255,0.18)";
+
+    ctx.fillRect(0, 0, W, H);
+
+  } else {
+
+    clearCanvas();
+
+  }
+
+  const count =
+    Number(countSlider.value);
+
+  const speed =
+    Number(speedSlider.value);
+
+  const amp =
+    Number(ampSlider.value) *
+    Math.PI / 180;
+
+  const time = t * speed;
+
+  /* YouTube横長画面用 */
+  const topY = 90;
+  const minLen = 300;
+  const maxLen = 600;
+
+  const pivotX = W / 2;
+  const supportHalfWidth = 150;
+
+  /* 支点 */
+  ctx.beginPath();
+  ctx.moveTo(
+    pivotX - supportHalfWidth,
+    topY
+  );
+
+  ctx.lineTo(
+    pivotX + supportHalfWidth,
+    topY
+  );
+
+  ctx.strokeStyle = "#222";
+  ctx.lineWidth = 5;
+  ctx.stroke();
+
+  for (let i = 0; i < count; i++) {
+
+    const ratio =
+      i / Math.max(1, count - 1);
+
+    const len =
+      minLen +
+      (maxLen - minLen) * ratio;
+
+    const baseFreq = 1.55;
+    const freq =
+      baseFreq + i * 0.035;
+
+    const angle =
+      amp * Math.sin(freq * time);
+
+    const x =
+      pivotX +
+      Math.sin(angle) * len;
+
+    const y =
+      topY +
+      Math.cos(angle) * len;
+
+    /* 糸 */
+    ctx.beginPath();
+    ctx.moveTo(pivotX, topY);
+    ctx.lineTo(x, y);
+
+    ctx.strokeStyle =
+      "rgba(40,40,40,0.72)";
+
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    /* 支点 */
+    ctx.beginPath();
+
+    ctx.arc(
+      pivotX,
+      topY,
+      3,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fillStyle = "#222";
+    ctx.fill();
+
+    /* 振り子 */
+    const hue =
+      200 + i * 4;
+
+    ctx.beginPath();
+
+    ctx.arc(
+      x,
+      y,
+      11,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fillStyle =
+      `hsl(${hue},70%,55%)`;
+
+    ctx.fill();
+  }
+
+  ctx.fillStyle =
+    "rgba(0,0,0,0.68)";
+
+  ctx.font =
+    "20px system-ui, sans-serif";
+
+  if (!running && simElapsed === 0) {
+
+    ctx.fillText(
+      "静止画面です。設定して「閉じる」で最初から動きます",
+      25,
+      35
+    );
+
+  } else if (!running && settingsOpen) {
+
+    ctx.fillText(
+      "設定中です。「閉じる」で最初から再生します",
+      25,
+      35
+    );
+
+  } else {
+
+    ctx.fillText(
+      "最初にそろって、少しずつ模様が崩れていきます",
+      25,
+      35
+    );
+
+  }
+}
+
+function animate(now) {
+
+  const dt =
+    Math.min(
+      (now - lastFrame) / 1000,
+      0.03
+    );
+
+  lastFrame = now;
+
+  if (running) {
+    simElapsed += dt;
+  }
+
+  drawScene(simElapsed);
+
+  requestAnimationFrame(animate);
+}
+
+toggleBtn.addEventListener(
+  "click",
+  () => {
+
+    if (!settingsOpen) {
+      openSettings();
+    } else {
+      closeSettingsAndStart();
+    }
+
+  }
+);
+
+[
+  countSlider,
+  speedSlider,
+  ampSlider,
+  trailSlider
+
+].forEach(el => {
+
+  el.addEventListener(
+    "input",
+    () => {
+
+      updateLabels();
+
+      if (!running) {
+        drawScene(0);
+      }
+
+    }
+  );
+
+});
+
+updateLabels();
+drawScene(0);
+requestAnimationFrame(animate);
+
+</script>
+
+</body>
+</html>
+```
