@@ -10,19 +10,30 @@
   <script src="/assets/ui.js"></script>
 
 <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f4f6f8;
-      color: #222;
-    }
 
-    .wrap {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 10px 16px 18px;
-    }
 
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f4f6f8;
+  color: #222;
+}
+.wrap {
+  width: 100vw;
+  height: 100%;
+  margin: 0;
+  padding: 12px 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
    h1 {
   margin: 8px 0 14px;
   font-size: 2rem;
@@ -62,6 +73,9 @@
       color: white;
       white-space: nowrap;
     }
+    #toggleBtn {
+  margin-right: 500px;
+}
 
     .panel {
       background: #fff;
@@ -100,21 +114,21 @@
       font-weight: 700;
     }
 
-    .canvas-wrap {
-      width: 100%;
-      max-width: 1280px;
-      aspect-ratio: 16 / 9;
-      margin: 0 auto;
-    }
+   .canvas-wrap {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+}
 
-    canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    }
+   canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
 
     .note {
       margin-top: 8px;
